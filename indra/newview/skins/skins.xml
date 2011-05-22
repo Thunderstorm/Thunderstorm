@@ -1,0 +1,126 @@
+<llsd>
+    <array>
+	<map>
+        <key>name</key>
+            <string>Firestorm</string>
+        <key>folder</key>
+            <string>firestorm</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>Grey</string>
+                <key>folder</key>
+                    <string>grey</string>
+                </map>
+            </array>
+        </map>
+		
+		<map>
+        <key>name</key>
+            <string>Firestorm W/SideTabs</string>
+        <key>folder</key>
+            <string>firestormsidetabs</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>Grey</string>
+                <key>folder</key>
+                    <string>grey</string>
+                </map>
+            </array>
+        </map>
+<!--
+
+		<map>
+        <key>name</key>
+            <string>Firestorm Clear</string>
+        <key>folder</key>
+            <string>firestormclear</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>Clear</string>
+                <key>folder</key>
+                    <string>clear</string>
+                </map>
+            </array>
+        </map>
+-->
+        <map>
+        <key>name</key>
+            <string>MetaHarper Modern</string>
+        <key>folder</key>
+            <string>metaharper</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>AppalachianSky</string>
+                <key>folder</key>
+                    <string>appalachian_sky</string>
+                </map>
+            </array>
+        </map>
+
+        <map>
+        <key>name</key>
+            <string>MetaHarper w/SideTabs</string>
+        <key>folder</key>
+            <string>metaharpersidetabs</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>AppalachianSky</string>
+                <key>folder</key>
+                    <string>appalachian_sky</string>
+                </map>
+            </array>
+        </map>
+        
+        <map>
+        <key>name</key>
+            <string>StarLight</string>
+        <key>folder</key>
+            <string>starlight</string>
+        <key>themes</key>
+            <array>
+                <map>
+                <key>name</key>
+                    <string>Nostalgia Blue</string>
+                <key>folder</key>
+                    <string>nostalgia_blue</string>
+                </map>
+                <map>
+                <key>name</key>
+                    <string>Original Orange</string>
+                <key>folder</key>
+                    <string>original_orange</string>
+                </map>
+                <map>
+                <key>name</key>
+                    <string>Original Teal</string>
+                <key>folder</key>
+                    <string>original_teal</string>
+                </map>
+                <map>
+                <key>name</key>
+                    <string>Silver Blue</string>
+                <key>folder</key>
+                    <string>silver_blue</string>
+                </map>
+                <map>
+                <key>name</key>
+                    <string>Silver Pink</string>
+                <key>folder</key>
+                    <string>silver_pink</string>
+                </map>
+
+            </array>
+        </map>
+    </array>
+</llsd>
+
