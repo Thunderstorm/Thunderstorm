@@ -214,9 +214,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>72e6e2eff5d146a107f3059b6c31fb95</string>
+            <string>700b07b0774b0661fbe1851668d12764</string>
             <key>url</key>
-            <uri>http://s3.amazonaws.com/viewer-source-downloads/install_pkgs/boost-1.39.0-windows-20100630.tar.bz2</uri>
+            <uri>https://github.com/downloads/Thunderstorm/Thunderstorm/boost-1.45.0-windows-VC100-V2.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -610,9 +610,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>0859d47242990125f17eaab30bece2ff</string>
+            <string>861f0d09557901c39d5c7844099b0687</string>
             <key>url</key>
-            <uri>http://viewer-source-downloads.s3.amazonaws.com/install_pkgs/google_breakpad-0.0.0-rev599-windows-20100524.tar.bz2</uri>
+            <uri>https://github.com/downloads/Thunderstorm/Thunderstorm/google_breakpad-Thunderstorm.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -811,10 +811,10 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>caf152cfc730737c124f7612cf68fbd3</string>
+			<string>91e081c4b7b4949c4e53849182a42370</string>
             <key>url</key>
-            <uri>http://s3.amazonaws.com/viewer-source-downloads/install_pkgs/jsoncpp-svn-r69-windows-20090922.tar.bz2</uri>
-          </map>
+			<uri>https://github.com/downloads/siana/SingularityViewer/jsoncpp-0.5.0-windows-20110320.tar.bz2</uri>
+	      </map>
         </map>
       </map>
       <key>kdu</key>
@@ -844,9 +844,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>066e089a5d9faeaf131e1f4e4860a163</string>
+			<string>8bb0945c654b001f860c4822ab03971d</string>
             <key>url</key>
-            <uri>scp:install-packages.lindenlab.com:/local/www/install-packages/doc/kdu-6.4.1-windows-20101123.tar.bz2</uri>
+			<uri>https://github.com/downloads/simms/ProStorm/openjpgk.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -995,9 +995,9 @@ anguage Infrstructure (CLI) international standard</string>
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>b678c4d18ea8e4fab42b20f8d0b2629a</string>
+            <string>999b265a3af47eb13e9a380d042a1763</string>
             <key>url</key>
-            <uri>http://viewer-source-downloads.s3.amazonaws.com/install_pkgs/llqtwebkit-windows-qt4.7.1-20101221.tar.bz2</uri>
+            <uri>https://github.com/downloads/siana/SingularityViewer/llqtwebkit-4.7.1-windows-20110320.tar.bz2</uri>
           </map>
         </map>
       </map>
