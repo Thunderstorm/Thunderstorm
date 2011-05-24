@@ -40,6 +40,7 @@
 
 #include "vorbis/codec.h"
 #include "vorbis/vorbisfile.h"
+#include <iterator> //VS2010
 
 extern LLAudioEngine *gAudiop;
 

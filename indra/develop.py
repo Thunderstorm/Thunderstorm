@@ -69,7 +69,7 @@ class PlatformSetup(object):
     for t in ('Debug', 'Release', 'RelWithDebInfo'):
         build_types[t.lower()] = t
 
-    build_type = build_types['relwithdebinfo']
+    build_type = build_types['release']
     standalone = 'OFF'
     unattended = 'OFF'
     universal = 'OFF'
@@ -478,11 +478,16 @@ class WindowsSetup(PlatformSetup):
         'vc90' : {
             'gen' : r'Visual Studio 9 2008',
             'ver' : r'9.0'
+            },
+        'vc100' : {
+            'gen' : r'Visual Studio 10',
+            'ver' : r'10.0'
             }
         }
     gens['vs2003'] = gens['vc71']
     gens['vs2005'] = gens['vc80']
     gens['vs2008'] = gens['vc90']
+    gens['vs2010'] = gens['vc100']
 
     search_path = r'C:\windows'
     exe_suffixes = ('.exe', '.bat', '.com')
@@ -494,14 +499,14 @@ class WindowsSetup(PlatformSetup):
 
     def _get_generator(self):
         if self._generator is None:
-            for version in 'vc80 vc90 vc71'.split():
+            for version in 'vc100 vc80 vc90 vc71'.split():
                 if self.find_visual_studio(version):
                     self._generator = version
                     print 'Building with ', self.gens[version]['gen']
                     break
                 else:
                     print >> sys.stderr, 'Cannot find a Visual Studio installation, testing for express editions'
-                    for version in 'vc80 vc90 vc71'.split():
+                    for version in 'vc100 vc80 vc90 vc71'.split():
                         if self.find_visual_studio_express(version):
                             self._generator = version
                             self.using_express = True
@@ -597,7 +602,7 @@ class WindowsSetup(PlatformSetup):
     def get_build_cmd(self):
         if self.incredibuild:
             config = self.build_type
-            if self.gens[self.generator]['ver'] in [ r'8.0', r'9.0' ]:
+            if self.gens[self.generator]['ver'] in [ r'8.0', r'9.0',r'10.0' ]:
                 config = '\"%s|Win32\"' % config
 
             executable = 'buildconsole'
@@ -736,8 +741,8 @@ Options:
   -m32 | -m64           build architecture (32-bit or 64-bit)
   -N | --no-distcc      disable use of distcc
   -G | --generator=NAME generator name
-                        Windows: VC71 or VS2003 (default), VC80 (VS2005) or 
-                          VC90 (VS2008)
+                        Windows: VC71 or VS2003 (default), VC80 (VS2005) 
+                          VC90 (VS2008), or VC100 (VS2010)
                         Mac OS X: Xcode (default), Unix Makefiles
                         Linux: Unix Makefiles (default), KDevelop3
   -p | --project=NAME   set the root project name. (Doesn't effect makefiles)

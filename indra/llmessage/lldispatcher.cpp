@@ -31,6 +31,7 @@
 #include <algorithm>
 #include "llstl.h"
 #include "message.h"
+#include <iterator> //VS2010
 
 ///----------------------------------------------------------------------------
 /// Class lldispatcher
