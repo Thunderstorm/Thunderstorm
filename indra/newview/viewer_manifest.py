@@ -240,22 +240,25 @@ class WindowsManifest(ViewerManifest):
         else:
             print "Doesn't exist:", src
         
-    def enable_crt_manifest_check(self):
-        if self.is_packaging_viewer():
-           WindowsManifest.copy_action = WindowsManifest.test_msvcrt_and_copy_action
+    ### DISABLED MANIFEST CHECKING for vs2010.  Simms
+    # shortly.  If this hasn't been reenabled by the 2.9 viewer release then it
+    # should be deleted -brad
+    #def enable_crt_manifest_check(self):
+    #    if self.is_packaging_viewer():
+    #       WindowsManifest.copy_action = WindowsManifest.test_msvcrt_and_copy_action
 
-    def enable_no_crt_manifest_check(self):
-        if self.is_packaging_viewer():
-            WindowsManifest.copy_action = WindowsManifest.test_for_no_msvcrt_manifest_and_copy_action
+    #def enable_no_crt_manifest_check(self):
+    #    if self.is_packaging_viewer():
+    #        WindowsManifest.copy_action = WindowsManifest.test_for_no_msvcrt_manifest_and_copy_action
 
-    def disable_manifest_check(self):
-        if self.is_packaging_viewer():
-            del WindowsManifest.copy_action
+    #def disable_manifest_check(self):
+    #    if self.is_packaging_viewer():
+    #        del WindowsManifest.copy_action
 
     def construct(self):
         super(WindowsManifest, self).construct()
 
-        self.enable_crt_manifest_check()
+        #self.enable_crt_manifest_check()
 
         if self.is_packaging_viewer():
             # Find secondlife-bin.exe in the 'configuration' dir, then rename it to the result of final_exe.
@@ -266,7 +269,7 @@ class WindowsManifest(ViewerManifest):
                                'llplugin', 'slplugin', self.args['configuration'], "slplugin.exe"),
                   "slplugin.exe")
         
-        self.disable_manifest_check()
+        #self.disable_manifest_check()
 
         self.path(src="../viewer_components/updater/scripts/windows/update_install.bat", dst="update_install.bat")
 
@@ -274,7 +277,7 @@ class WindowsManifest(ViewerManifest):
         if self.prefix(src=os.path.join(os.pardir, 'sharedlibs', self.args['configuration']),
                        dst=""):
 
-            self.enable_crt_manifest_check()
+            #self.enable_crt_manifest_check()
 
             # Get llcommon and deps. If missing assume static linkage and continue.
             try:
@@ -286,7 +289,7 @@ class WindowsManifest(ViewerManifest):
                 print err.message
                 print "Skipping llcommon.dll (assuming llcommon was linked statically)"
 
-            self.disable_manifest_check()
+            #self.disable_manifest_check()
 
             # Get fmod dll, continue if missing
             try:
@@ -300,19 +303,14 @@ class WindowsManifest(ViewerManifest):
             else:
                 self.path("openjpeg.dll")
 
-            try:
-                # These need to be installed as a SxS assembly, currently a 'private' assembly.
-                # See http://msdn.microsoft.com/en-us/library/ms235291(VS.80).aspx
-                if self.args['configuration'].lower() == 'debug':
-                    self.path("msvcr100d.dll")
-                    self.path("msvcp100d.dll")
-                #    self.path("Microsoft.VC80.DebugCRT.manifest")
-                else:
-                    self.path("msvcr100.dll")
-                    self.path("msvcp100.dll")
-                #    self.path("Microsoft.VC80.CRT.manifest")
-            except RuntimeError:
-                print "WARNING: not copying VC runtimes to staging area, this will fail if you make an installer from this staging"
+            # These need to be installed as a SxS assembly, currently a 'private' assembly.
+            # See http://msdn.microsoft.com/en-us/library/ms235291(VS.80).aspx
+            if self.args['configuration'].lower() == 'debug':
+                 self.path("msvcr100d.dll")
+                 self.path("msvcp100d.dll")
+            else:
+                 self.path("msvcr100.dll")
+                 self.path("msvcp100.dll")
 
             # Vivox runtimes
             self.path("SLVoice.exe")
@@ -342,7 +340,7 @@ class WindowsManifest(ViewerManifest):
         # For use in crash reporting (generates minidumps)
         self.path("dbghelp.dll")
 
-        self.enable_no_crt_manifest_check()
+        #self.enable_no_crt_manifest_check()
         
         # Media plugins - QuickTime
         if self.prefix(src='../media_plugins/quicktime/%s' % self.args['configuration'], dst="llplugin"):
@@ -423,7 +421,7 @@ class WindowsManifest(ViewerManifest):
 
                 self.end_prefix()
 
-        self.disable_manifest_check()
+        #self.disable_manifest_check()
 
         # pull in the crash logger and updater from other projects
         # tag:"crash-logger" here as a cue to the exporter
