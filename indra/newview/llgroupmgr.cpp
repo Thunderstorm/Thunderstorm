@@ -53,13 +53,14 @@
 
 #if LL_MSVC
 // disable boost::lexical_cast warning
-#pragma warning (disable:4702)
+	#pragma warning (push)
+	#pragma warning (disable : 4702) 
 #endif
 
 #include <boost/lexical_cast.hpp>
 
 #if LL_MSVC
-#pragma warning(pop)   // Restore all warnings to the previous state
+	#pragma warning (pop)  
 #endif
 
 const U32 MAX_CACHED_GROUPS = 10;

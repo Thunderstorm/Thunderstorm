@@ -380,9 +380,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>bab1babcb01ff9849b7f072d352e1ecd</string>
+            <string>d353df1b1d48e00abef21a174ed70281</string>
             <key>url</key>
-            <uri>scp:install-packages.lindenlab.com:/local/www/install-packages/doc/fmod-3.75-windows-20101007.tar.bz2</uri>
+            <uri>https://github.com/downloads/Thunderstorm/Thunderstorm/fmod-thunderstorm-win.tar.bz2</uri>
           </map>
         </map>
       </map>

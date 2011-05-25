@@ -204,9 +204,9 @@ class WindowsManifest(ViewerManifest):
             self.created_paths.append(dst)
             if not os.path.isdir(src):
                 if(self.args['configuration'].lower() == 'debug'):
-                    test_assembly_binding(src, "Microsoft.VC80.DebugCRT", "8.0.50727.4053")
+                    test_assembly_binding(src, "Microsoft.VC100.DebugCRT", "10.0.30319.1")
                 else:
-                    test_assembly_binding(src, "Microsoft.VC80.CRT", "8.0.50727.4053")
+                    test_assembly_binding(src, "Microsoft.VC100.CRT", "10.0.30319.1")
                 self.ccopy(src,dst)
             else:
                 raise Exception("Directories are not supported by test_CRT_and_copy_action()")
@@ -225,9 +225,9 @@ class WindowsManifest(ViewerManifest):
             if not os.path.isdir(src):
                 try:
                     if(self.args['configuration'].lower() == 'debug'):
-                        test_assembly_binding(src, "Microsoft.VC80.DebugCRT", "")
+                        test_assembly_binding(src, "Microsoft.VC100.DebugCRT", "")
                     else:
-                        test_assembly_binding(src, "Microsoft.VC80.CRT", "")
+                        test_assembly_binding(src, "Microsoft.VC100.CRT", "")
                     raise Exception("Unknown condition")
                 except NoManifestException, err:
                     pass
@@ -304,13 +304,13 @@ class WindowsManifest(ViewerManifest):
                 # These need to be installed as a SxS assembly, currently a 'private' assembly.
                 # See http://msdn.microsoft.com/en-us/library/ms235291(VS.80).aspx
                 if self.args['configuration'].lower() == 'debug':
-                    self.path("msvcr80d.dll")
-                    self.path("msvcp80d.dll")
-                    self.path("Microsoft.VC80.DebugCRT.manifest")
+                    self.path("msvcr100d.dll")
+                    self.path("msvcp100d.dll")
+                #    self.path("Microsoft.VC80.DebugCRT.manifest")
                 else:
-                    self.path("msvcr80.dll")
-                    self.path("msvcp80.dll")
-                    self.path("Microsoft.VC80.CRT.manifest")
+                    self.path("msvcr100.dll")
+                    self.path("msvcp100.dll")
+                #    self.path("Microsoft.VC80.CRT.manifest")
             except RuntimeError:
                 print "WARNING: not copying VC runtimes to staging area, this will fail if you make an installer from this staging"
 
