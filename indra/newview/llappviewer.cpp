@@ -347,7 +347,7 @@ void init_default_trans_args()
 const char *VFS_DATA_FILE_BASE = "data.db2.x.";
 const char *VFS_INDEX_FILE_BASE = "index.db2.x.";
 
-static std::string gWindowTitle;
+std::string gWindowTitle;
 
 LLAppViewer::LLUpdaterInfo *LLAppViewer::sUpdaterInfo = NULL ;
 
@@ -4797,8 +4797,12 @@ void LLAppViewer::handleLoginComplete()
 	mOnLoginCompleted();
 
 //-TT Window Title Access
-//	gWindowTitle += std::string(" - ") + gAgentAvatarp->getFullname();
-//	gViewerWindow->setTitle(gWindowTitle);
+        std::string full_name = gAgentAvatarp->getFullname();
+        if (!full_name.empty())
+        {
+        	gWindowTitle += std::string(" - ") + full_name;
+        	gViewerWindow->setTitle(gWindowTitle);
+        }
 //-TT
 
 	writeDebugInfo();
