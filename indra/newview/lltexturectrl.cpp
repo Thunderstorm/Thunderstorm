@@ -740,7 +740,6 @@ void LLFloaterTexturePicker::onBtnNone(void* userdata)
 //static
 void LLFloaterTexturePicker::onBtnCpToInv(void* userdata)
 {
-
 	LLFloaterTexturePicker* self = (LLFloaterTexturePicker*) userdata;
 
 	LLUUID mUUID = self->mImageAssetID;
@@ -751,21 +750,16 @@ void LLFloaterTexturePicker::onBtnCpToInv(void* userdata)
 	if(folder_id.notNull())
 	{
 		std::string name;
+		std::string desc;
 		name.assign("temp.");
+		desc.assign(mUUID.asString());
 		name.append(mUUID.asString());
 		LLUUID item_id;
 		item_id.generate();
 		LLPermissions perm;
-			perm.init(gAgentID,
-			gAgentID,
-			LLUUID::null,
-			LLUUID::null);
+			perm.init(gAgentID,	gAgentID, LLUUID::null, LLUUID::null);
 		U32 next_owner_perm = PERM_MOVE | PERM_TRANSFER;
-			perm.initMasks(PERM_ALL,
-				   PERM_ALL,
-				   PERM_NONE,
-				   PERM_NONE,
-				   next_owner_perm);
+			perm.initMasks(PERM_ALL, PERM_ALL, PERM_NONE,PERM_NONE, next_owner_perm);
 		S32 creation_date_now = time_corrected();
 		LLPointer<LLViewerInventoryItem> item
 			= new LLViewerInventoryItem(item_id,
@@ -775,7 +769,7 @@ void LLFloaterTexturePicker::onBtnCpToInv(void* userdata)
 								asset_type,
 								inv_type,
 								name,
-								"",
+								desc,
 								LLSaleInfo::DEFAULT,
 								LLInventoryItemFlags::II_FLAGS_NONE,
 								creation_date_now);
@@ -784,13 +778,10 @@ void LLFloaterTexturePicker::onBtnCpToInv(void* userdata)
 		gInventory.updateItem(item);
 		gInventory.notifyObservers();
 
-
 		LLInventoryPanel *active_panel = LLInventoryPanel::getActiveInventoryPanel();
 		if (active_panel)
 		{
-
-				active_panel->openSelected();
-
+			active_panel->openSelected();
 			LLFocusableElement* focus = gFocusMgr.getKeyboardFocus();
 			gFocusMgr.setKeyboardFocus(focus);
 		}
@@ -799,21 +790,16 @@ void LLFloaterTexturePicker::onBtnCpToInv(void* userdata)
 	{
 		llwarns << "Can't find a folder to put it in" << llendl;
 	}
-
-
 }
 
 // static
 void LLFloaterTexturePicker::onBtnUUID( void* userdata )
 {
-
 	LLFloaterTexturePicker* self = (LLFloaterTexturePicker*) userdata;
 	std::string texture_uuid = self->getChild<LLUICtrl>("texture_uuid")->getValue().asString();
-	if (texture_uuid.length() == 36) 
-	{
-		self->setImageID( LLUUID(texture_uuid) );
-		self->commitIfImmediateSet();
-	}
+	self->setImageID( LLUUID(texture_uuid) );
+	self->commitIfImmediateSet();
+	self->mViewModel->resetDirty();
 }
 // </edit>
 /*
