@@ -36,6 +36,12 @@
 #include "lluictrlfactory.h"
 #include "llviewerobjectlist.h"
 #include "llvoavatarself.h"
+// <edit>
+#include "llfocusmgr.h"
+#include "llnotificationsutil.h"
+#include "llinventorypanel.h"
+#include "llinventorydefines.h"
+// </edit>
 
 using namespace LLVOAvatarDefines;
 
@@ -129,8 +135,10 @@ static LLVOAvatar* find_avatar(const LLUUID& id)
 
 void LLFloaterAvatarTextures::refresh()
 {
-	if (gAgent.isGodlike())
-	{
+// <edit>
+//	if (gAgent.isGodlike())
+//	{
+// </edit>
 		LLVOAvatar *avatarp = find_avatar(mID);
 		if (avatarp)
 		{
@@ -148,54 +156,96 @@ void LLFloaterAvatarTextures::refresh()
 		{
 			setTitle(mTitle + ": " + getString("InvalidAvatar") + " (" + mID.asString() + ")");
 		}
-	}
+// <edit>
+//	}
+// </edit>
 }
 
 // static
 void LLFloaterAvatarTextures::onClickDump(void* data)
 {
-	if (gAgent.isGodlike())
+
+	LLFloaterAvatarTextures* self = (LLFloaterAvatarTextures*)data;
+	LLVOAvatar* avatarp = find_avatar(self->mID);
+	if (!avatarp) return;
+// <edit> 
+		std::string fullname;
+		gCacheName->getFullName(avatarp->getID(), fullname);
+		std::string msg;
+		msg.assign("Avatar Textures : ");
+		msg.append(fullname);
+		msg.append("\n");
+// </edit>
+	for (S32 i = 0; i < avatarp->getNumTEs(); i++)
 	{
-		const LLVOAvatarSelf* avatarp = gAgentAvatarp;
-		if (!avatarp) return;
-		for (S32 i = 0; i < avatarp->getNumTEs(); i++)
+// <edit>
+		std::string submsg;// sumo for each text
+		const LLTextureEntry* te = avatarp->getTE(i);
+		if (!te) continue;
+		LLUUID mUUID = te->getID();
+		submsg.assign(LLVOAvatarDictionary::getInstance()->getTexture(ETextureIndex(i))->mName);
+		submsg.append(" : ");
+		if (mUUID == IMG_DEFAULT_AVATAR)
 		{
-			const LLTextureEntry* te = avatarp->getTE(i);
-			if (!te) continue;
-
-			const LLVOAvatarDictionary::TextureEntry* tex_entry = LLVOAvatarDictionary::getInstance()->getTexture((ETextureIndex)(i));
-			if (!tex_entry)
-				continue;
-
-			if (LLVOAvatar::isIndexLocalTexture((ETextureIndex)i))
+			submsg.append("No texture") ;
+		}
+		else
+		{
+			submsg.append(mUUID.asString());
+			msg.append(submsg);
+			msg.append("\n");
+			LLUUID mUUID = te->getID();
+			LLAssetType::EType asset_type = LLAssetType::AT_TEXTURE;
+			LLInventoryType::EType inv_type = LLInventoryType::IT_TEXTURE;
+			const LLUUID folder_id = gInventory.findCategoryUUIDForType(LLFolderType::assetTypeToFolderType(asset_type));
+			if(folder_id.notNull())
 			{
-				LLUUID id = IMG_DEFAULT_AVATAR;
-				LLWearableType::EType wearable_type = LLVOAvatarDictionary::getInstance()->getTEWearableType((ETextureIndex)i);
-				if (avatarp->isSelf())
+				std::string name;
+				std::string desc;
+				name.assign("temp.");
+				desc.assign(mUUID.asString());
+				name.append(mUUID.asString());
+				LLUUID item_id;
+				item_id.generate();
+				LLPermissions perm;
+					perm.init(gAgentID,	gAgentID, LLUUID::null, LLUUID::null);
+				U32 next_owner_perm = PERM_MOVE | PERM_TRANSFER;
+					perm.initMasks(PERM_ALL, PERM_ALL, PERM_NONE,PERM_NONE, next_owner_perm);
+				S32 creation_date_now = time_corrected();
+				LLPointer<LLViewerInventoryItem> item
+					= new LLViewerInventoryItem(item_id,
+										folder_id,
+										perm,
+										mUUID,
+										asset_type,
+										inv_type,
+										name,
+										desc,
+										LLSaleInfo::DEFAULT,
+										LLInventoryItemFlags::II_FLAGS_NONE,
+										creation_date_now);
+				item->updateServer(TRUE);
+
+				gInventory.updateItem(item);
+				gInventory.notifyObservers();
+		
+				LLInventoryPanel *active_panel = LLInventoryPanel::getActiveInventoryPanel();
+				if (active_panel)
 				{
-					LLWearable *wearable = gAgentWearables.getWearable(wearable_type, 0);
-					if (wearable)
-					{
-						LLLocalTextureObject *lto = wearable->getLocalTextureObject(i);
-						if (lto)
-						{
-							id = lto->getID();
-						}
-					}
-				}
-				if (id != IMG_DEFAULT_AVATAR)
-				{
-					llinfos << "TE " << i << " name:" << tex_entry->mName << " id:" << id << llendl;
-				}
-				else
-				{
-					llinfos << "TE " << i << " name:" << tex_entry->mName << " id:" << "<DEFAULT>" << llendl;
+					active_panel->openSelected();
+					LLFocusableElement* focus = gFocusMgr.getKeyboardFocus();
+					gFocusMgr.setKeyboardFocus(focus);
 				}
 			}
 			else
 			{
-				llinfos << "TE " << i << " name:" << tex_entry->mName << " id:" << te->getID() << llendl;
+				llwarns << "Can't find a folder to put it in" << llendl;
 			}
 		}
+
 	}
+	LLSD args;
+	args["MESSAGE"] = msg;
+	LLNotificationsUtil::add("SystemMessage", args);
 }
+// </edit>
