@@ -3167,6 +3167,9 @@ class LLAvatarDebug : public view_listener_t
 		LLVOAvatar* avatar = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
 		if( avatar )
 		{
+// <edit>
+				((LLVOAvatarSelf *)avatar)->dumpLocalTextures();
+/*
 			if (avatar->isSelf())
 			{
 				((LLVOAvatarSelf *)avatar)->dumpLocalTextures();
@@ -3176,6 +3179,8 @@ class LLAvatarDebug : public view_listener_t
 			strings.push_back(avatar->getID().asString());
 			LLUUID invoice;
 			send_generic_message("dumptempassetdata", strings, invoice);
+*/
+// </edit>
 			LLFloaterReg::showInstance( "avatar_textures", LLSD(avatar->getID()) );
 		}
 		return true;
