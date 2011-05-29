@@ -2545,6 +2545,16 @@ class LLObjectKey : public view_listener_t
     }
 }; 
 
+class LLObjectTexture : public view_listener_t
+{
+
+    bool handleEvent(const LLSD& userdata)
+    {
+LLFloaterReg::showInstance("inspect_texture", LLSD());
+return true;
+}
+};
+
 class LLObjectSaveAs : public view_listener_t
 {
     bool handleEvent(const LLSD& userdata)
@@ -8856,7 +8866,7 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLObjectMute(), "Object.Mute");
     view_listener_t::addMenu(new LLObjectDerender(), "Object.Derender");
 // <edit>
-    //view_listener_t::addMenu(new LLObjectTexture(), "Object.Texture");
+    view_listener_t::addMenu(new LLObjectTexture(), "Object.Texture");
     view_listener_t::addMenu(new LLObjectKey(), "Object.Key");
     view_listener_t::addMenu(new LLObjectParticle(), "Object.Particle");
 	view_listener_t::addMenu(new LLObjectSaveAs(), "Object.SaveAs");
