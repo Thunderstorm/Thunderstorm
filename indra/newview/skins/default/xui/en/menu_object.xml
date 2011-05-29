@@ -262,6 +262,12 @@
     label="ThunderStorm"
     name="ThunderStorm Features">
 	<menu_item_call
+		label="UUID"
+		name="UUID">
+		<menu_item_call.on_click
+			function="Object.Key" />
+	</menu_item_call>
+	<menu_item_call
 		label="Textures"
         name="Texture Inspect">
 		<menu_item_call.on_click

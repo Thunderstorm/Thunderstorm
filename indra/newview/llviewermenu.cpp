@@ -2520,7 +2520,7 @@ class LLObjectParticle : public view_listener_t
 				script_stream << "\t}\n";
 				script_stream << "}\n";
 				LLSD args;
-				args["MESSAGE"] = "\nReverse engineering Script has been copied in your clipboard, past it in a new script\n";
+				args["MESSAGE"] = "\nReverse engineering Script has been copied to your clipboard, paste it in a new script\n";
 				LLNotificationsUtil::add("SystemMessage", args);
 
 				gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(script_stream.str()));
@@ -2529,15 +2529,21 @@ class LLObjectParticle : public view_listener_t
 		return true;
 	}
 };
-class LLObjectTexture : public view_listener_t
+//simms Object UUID
+class LLObjectKey : public view_listener_t
 {
-
     bool handleEvent(const LLSD& userdata)
     {
-		LLFloaterReg::showInstance("inspect_texture", LLSD());
-		return true;
-	}
-};
+        LLViewerObject* simms = LLSelectMgr::getInstance()->getSelection()->getFirstObject();
+        if(!simms)return true;
+        LLUUID id = simms->getID();
+		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
+		id.toString(buffer);
+		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
+		cmdline_printchat("UUID: "+id.asString());
+        return true;
+    }
+}; 
 
 class LLObjectSaveAs : public view_listener_t
 {
@@ -4330,7 +4336,7 @@ void handle_object_owner_permissive(void*)
 void handle_object_owner_self(void*)
 {
 	// only send this if they're a god.
-	if(gAgent.isGodlike())
+	gAgent.isGodlike();
 	{
 		LLSelectMgr::getInstance()->sendOwner(gAgent.getID(), gAgent.getGroupID(), TRUE);
 	}
@@ -4345,7 +4351,7 @@ void handle_object_lock(void*)
 void handle_object_asset_ids(void*)
 {
 	// only send this if they're a god.
-	if (gAgent.isGodlike())
+	gAgent.isGodlike();
 	{
 		LLSelectMgr::getInstance()->sendGodlikeRequest("objectinfo", "assetids");
 	}
@@ -8850,14 +8856,14 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLObjectMute(), "Object.Mute");
     view_listener_t::addMenu(new LLObjectDerender(), "Object.Derender");
 // <edit>
-    view_listener_t::addMenu(new LLObjectTexture(), "Object.Texture");
+    //view_listener_t::addMenu(new LLObjectTexture(), "Object.Texture");
+    view_listener_t::addMenu(new LLObjectKey(), "Object.Key");
     view_listener_t::addMenu(new LLObjectParticle(), "Object.Particle");
 	view_listener_t::addMenu(new LLObjectSaveAs(), "Object.SaveAs");
 	view_listener_t::addMenu(new LLObjectImport(), "Object.Import");
 // </edit>    
 	enable.add("Object.VisibleTake", boost::bind(&visible_take_object));
 	enable.add("Object.VisibleBuy", boost::bind(&visible_buy_object));
-
 	commit.add("Object.Buy", boost::bind(&handle_buy));
 	commit.add("Object.Edit", boost::bind(&handle_object_edit));
 	commit.add("Object.Inspect", boost::bind(&handle_object_inspect));

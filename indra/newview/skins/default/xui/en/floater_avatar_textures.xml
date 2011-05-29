@@ -59,7 +59,7 @@ Textures
     </text>
     <button
      height="40"
-     label="Dump IDs to Console"
+     label="Copy Temp To INV"
      label_selected="Dump"
      layout="topleft"
      name="Dump"
