@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<floater
+ legacy_header_height="18"
+ can_resize="true"
+ height="300"
+ layout="topleft"
+ min_height="300"
+ min_width="400"
+ name="inspect"
+ help_topic="inspect_texture"
+ save_rect="true"
+ title="INSPECT TEXTURES"
+ width="400">
+    <floater.string
+     name="timeStamp">
+        [wkday,datetime,local] [mth,datetime,local] [day,datetime,local] [hour,datetime,local]:[min,datetime,local]:[second,datetime,local] [year,datetime,local]
+    </floater.string>
+    <texture_picker
+     follows="left|top"
+     bottom="285"
+     height="256"
+     width="256"
+     right="266"
+     name="imagette" />
+    <scroll_list
+     bottom="278"
+     column_padding="0"
+     draw_heading="true"
+     follows="top|right|left|bottom"
+     layout="topleft"
+     left="268"
+     name="object_list"
+     right="-10"
+     tool_tip="Select an object from this list to highlight it in-world"
+     top="20">
+        <scroll_list.columns
+         label="UUID Texture"
+         name="uuid_text"
+         width="200" />
+        <scroll_list.columns
+         dynamic_width="true"
+         label="Height"
+         name="height" />
+        <scroll_list.columns
+         dynamic_width="true"
+         label="Width"
+         name="width" />
+        <scroll_list.columns
+         dynamic_width="true"
+         label="Type"
+         name="types" />
+		 <scroll_list.commit_callback
+		   function="Inspect.SelectObject" />
+    </scroll_list>
+    <button
+     follows="left|bottom"
+     height="23"
+     label="CpToInv selected"
+     layout="topleft"
+     left="-377"
+     name="button selection"
+     tool_tip="Copy to inventory the selected texture"
+     bottom="-10"
+     width="110">
+		<button.commit_callback
+		function="Inspect.CpToInvSelected" />
+	</button>
+    <button
+     follows="left|bottom"
+     height="23"
+     label="CpToInv All"
+     layout="topleft"
+     left_pad="5"
+     name="button all"
+     tool_tip="Copy to inventory the all textures"
+     top_delta="0"
+     width="110">
+		<button.commit_callback
+		function="Inspect.CpToInvAll" />
+	</button>
+</floater>

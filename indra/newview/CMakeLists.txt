@@ -70,6 +70,9 @@ include_directories(
     )
 
 set(viewer_SOURCE_FILES
+# <edit>
+    llfloaterinspecttexture.cpp	
+# </edit>
     ao.cpp
     aoengine.cpp
     aoset.cpp
@@ -633,6 +636,9 @@ endif (LINUX)
 set(viewer_HEADER_FILES
     CMakeLists.txt
     ViewerInstall.cmake
+# <edit>
+    llfloaterinspecttexture.h	
+# </edit>
     ao.h
     aoengine.h
     aoset.h
