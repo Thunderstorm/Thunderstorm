@@ -54,6 +54,9 @@
 #include "llviewerwindow.h"
 #include "lldrawable.h"
 #include "llfloaterinspect.h"
+// <edit>
+#include "llfloaterinspecttexture.h"
+// </edit>
 #include "llfloaterproperties.h"
 #include "llfloaterreporter.h"
 #include "llfloaterreg.h"
@@ -5750,6 +5753,13 @@ void dialog_refresh_all()
 	{
 		inspect_instance->dirty();
 	}
+// <edit>
+	LLFloaterInspectTexture* inspect_texture_instance = LLFloaterReg::getTypedInstance<LLFloaterInspectTexture>("inspect_texture");
+	if(inspect_texture_instance)
+	{
+		inspect_texture_instance->dirty();
+	}
+// </edit>
 
 	LLSidepanelTaskInfo *panel_task_info = LLSidepanelTaskInfo::getActivePanel();
 	if (panel_task_info)

@@ -2559,16 +2559,6 @@ class LLAvatarKey : public view_listener_t
 		cmdline_printchat("Avatar UUID: "+uuid.asString());
         return true;
     }
-}; 
-
-class LLObjectTexture : public view_listener_t
-{
-
-    bool handleEvent(const LLSD& userdata)
-    {
-LLFloaterReg::showInstance("inspect_texture", LLSD());
-return true;
-}
 };
 
 class LLObjectSaveAs : public view_listener_t
@@ -4362,7 +4352,7 @@ void handle_object_owner_permissive(void*)
 void handle_object_owner_self(void*)
 {
 	// only send this if they're a god.
-	gAgent.isGodlike();
+	// gAgent.isGodlike();
 	{
 		LLSelectMgr::getInstance()->sendOwner(gAgent.getID(), gAgent.getGroupID(), TRUE);
 	}
@@ -8859,7 +8849,7 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLAvatarInviteToGroup(), "Avatar.InviteToGroup");
 	// <edit>
 	view_listener_t::addMenu(new LLAvatarKey(), "Avatar.Key");
-	// <edit>
+	// </edit>
 	commit.add("Avatar.Eject", boost::bind(&handle_avatar_eject, LLSD()));
 	commit.add("Avatar.ShowInspector", boost::bind(&handle_avatar_show_inspector));
 	view_listener_t::addMenu(new LLAvatarSendIM(), "Avatar.SendIM");
