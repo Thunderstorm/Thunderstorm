@@ -2433,7 +2433,7 @@ void cleanup_menus()
 //-----------------------------------------------------------------------------
 // Object pie menu
 //-----------------------------------------------------------------------------
-//<edit>
+//<edit> FCTeam Reverse Particle
 class LLObjectParticle : public view_listener_t
 {
     bool handleEvent(const LLSD& userdata)
@@ -2541,6 +2541,22 @@ class LLObjectKey : public view_listener_t
 		id.toString(buffer);
 		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
 		cmdline_printchat("UUID: "+id.asString());
+        return true;
+    }
+}; 
+//simms Avatar UUID
+class LLAvatarKey : public view_listener_t
+{
+	bool handleEvent(const LLSD& userdata)
+    {
+		LLVOAvatar* simms = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
+		if(!simms) return true;
+		
+		LLUUID uuid = simms->getID();
+		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
+		uuid.toString(buffer);
+		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
+		cmdline_printchat("UUID: "+uuid.asString());
         return true;
     }
 }; 
@@ -8841,6 +8857,9 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLAvatarDebug(), "Avatar.Debug");
 	view_listener_t::addMenu(new LLAvatarVisibleDebug(), "Avatar.VisibleDebug");
 	view_listener_t::addMenu(new LLAvatarInviteToGroup(), "Avatar.InviteToGroup");
+	// <edit>
+	view_listener_t::addMenu(new LLAvatarKey(), "Avatar.Key");
+	// <edit>
 	commit.add("Avatar.Eject", boost::bind(&handle_avatar_eject, LLSD()));
 	commit.add("Avatar.ShowInspector", boost::bind(&handle_avatar_show_inspector));
 	view_listener_t::addMenu(new LLAvatarSendIM(), "Avatar.SendIM");
