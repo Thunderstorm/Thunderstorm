@@ -39,11 +39,13 @@ set(llcharacter_SOURCE_FILES
     llstatemachine.cpp
     lltargetingmotion.cpp
     llvisualparam.cpp
+    tsbvhexporter.cpp
     )
 
 set(llcharacter_HEADER_FILES
     CMakeLists.txt
 
+    tsbvhexporter.h
     llanimationstates.h
     llbvhloader.h
     llbvhconsts.h

@@ -2540,7 +2540,7 @@ class LLObjectKey : public view_listener_t
 		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
 		id.toString(buffer);
 		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
-		cmdline_printchat("UUID: "+id.asString());
+		cmdline_printchat("Object UUID: "+id.asString());
         return true;
     }
 }; 
@@ -2556,7 +2556,7 @@ class LLAvatarKey : public view_listener_t
 		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
 		uuid.toString(buffer);
 		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
-		cmdline_printchat("UUID: "+uuid.asString());
+		cmdline_printchat("Avatar UUID: "+uuid.asString());
         return true;
     }
 }; 
