@@ -219,7 +219,7 @@ LLPanelLogin::LLPanelLogin(const LLRect &rect,
 
 	LLComboBox* server_choice_combo = sInstance->getChild<LLComboBox>("server_combo");
 	server_choice_combo->setCommitCallback(onSelectServer, NULL);
-	server_choice_combo->setFocusLostCallback(boost::bind(onServerComboLostFocus, _1));
+//	server_choice_combo->setFocusLostCallback(boost::bind(onServerComboLostFocus, _1));
 	updateServerCombo();
 
 	childSetAction("connect_btn", onClickConnect, this);
@@ -942,11 +942,7 @@ void LLPanelLogin::onClickConnect(void *)
 			LLNotificationsUtil::add("StartRegionEmpty");
 			return;
 		}		
-		try
-		{
-			LLGridManager::getInstance()->setGridChoice(combo_val.asString());
-		}
-		catch (LLInvalidGridName ex)
+		if(!LLGridManager::getInstance()->setGridChoice(combo_val.asString()))
 		{
 			LLSD args;
 			args["GRID"] = combo_val.asString();
@@ -1060,26 +1056,18 @@ void LLPanelLogin::onPassKey(LLLineEditor* caller, void* user_data)
 
 void LLPanelLogin::updateServer()
 {
-	try 
+	updateServerCombo();	
+	// if they've selected another grid, we should load the credentials
+	// for that grid and set them to the UI.
+	if(sInstance && !sInstance->areCredentialFieldsDirty())
 	{
-
-		updateServerCombo();	
-		// if they've selected another grid, we should load the credentials
-		// for that grid and set them to the UI.
-		if(sInstance && !sInstance->areCredentialFieldsDirty())
-		{
-			LLPointer<LLCredential> credential = gSecAPIHandler->loadCredential(LLGridManager::getInstance()->getGrid());	
-			bool remember = sInstance->getChild<LLUICtrl>("remember_check")->getValue();
-			sInstance->setFields(credential, remember);
-		}
-		// grid changed so show new splash screen (possibly)
-		loadLoginPage();
-		updateLocationCombo(LLStartUp::getStartSLURL().getType() == LLSLURL::LOCATION);
+		LLPointer<LLCredential> credential = gSecAPIHandler->loadCredential(LLGridManager::getInstance()->getGrid());	
+		bool remember = sInstance->getChild<LLUICtrl>("remember_check")->getValue();
+		sInstance->setFields(credential, remember);
 	}
-	catch (LLInvalidGridName ex)
-	{
-		// do nothing
-	}
+	// grid changed so show new splash screen (possibly)
+	loadLoginPage();
+	updateLocationCombo(LLStartUp::getStartSLURL().getType() == LLSLURL::LOCATION);
 }
 
 void LLPanelLogin::updateServerCombo()
@@ -1134,14 +1122,20 @@ void LLPanelLogin::onSelectServer(LLUICtrl*, void*)
 	combo = sInstance->getChild<LLComboBox>("start_location_combo");	
 	combo->setCurrentByIndex(1);
 	LLStartUp::setStartSLURL(LLSLURL(gSavedSettings.getString("LoginLocation")));
-	LLGridManager::getInstance()->setGridChoice(combo_val.asString());
+	if(!LLGridManager::getInstance()->setGridChoice(combo_val.asString()))
+	{
+		LLSD args;
+		args["GRID"] = combo_val.asString();
+		LLNotificationsUtil::add("InvalidGrid", args);
+		return;
+	}
 	// This new selection will override preset uris
 	// from the command line.
 	updateServer();
 	updateLocationCombo(false);
 	updateLoginPanelLinks();
 }
-
+/*
 void LLPanelLogin::onServerComboLostFocus(LLFocusableElement* fe)
 {
 	if (!sInstance)
@@ -1152,10 +1146,10 @@ void LLPanelLogin::onServerComboLostFocus(LLFocusableElement* fe)
 	LLComboBox* combo = sInstance->getChild<LLComboBox>("server_combo");
 	if(fe == combo)
 	{
-		onSelectServer(combo, NULL);	
+		onSelectServer(combo, NULL);
 	}
 }
-
+*/
 void LLPanelLogin::updateLoginPanelLinks()
 {
 	LLSD grid_data;
