@@ -322,6 +322,7 @@ LLFloaterPreference::LLFloaterPreference(const LLSD& key)
 	mCommitCallbackRegistrar.add("Pref.VoiceSetKey",			boost::bind(&LLFloaterPreference::onClickSetKey, this));
 	mCommitCallbackRegistrar.add("Pref.EditMediaLists",			boost::bind(&LLFloaterPreference::onClickSetKey, this));
 	mCommitCallbackRegistrar.add("Pref.VoiceSetMiddleMouse",	boost::bind(&LLFloaterPreference::onClickSetMiddleMouse, this));
+	mCommitCallbackRegistrar.add("Pref.SetSounds",				boost::bind(&LLFloaterPreference::onClickSetSounds, this));
 //	mCommitCallbackRegistrar.add("Pref.ClickSkipDialogs",		boost::bind(&LLFloaterPreference::onClickSkipDialogs, this));
 //	mCommitCallbackRegistrar.add("Pref.ClickResetDialogs",		boost::bind(&LLFloaterPreference::onClickResetDialogs, this));
 	mCommitCallbackRegistrar.add("Pref.ClickEnablePopup",		boost::bind(&LLFloaterPreference::onClickEnablePopup, this));
@@ -435,8 +436,39 @@ BOOL LLFloaterPreference::postBuild()
 		gSavedPerAccountSettings.setString("BusyModeResponse", LLTrans::getString("BusyModeResponseDefault"));
 	}
 
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2011-06-11 (Catznip-2.6.c) | Added: Catznip-2.6.0c
+#ifndef LL_SEND_CRASH_REPORTS
+	// Hide the crash report tab if crash reporting isn't enabled
+	LLTabContainer* pTabContainer = getChild<LLTabContainer>("pref core");
+	if (pTabContainer)
+	{
+		LLPanel* pCrashReportPanel = pTabContainer->getPanelByName("crashreports");
+		if (pCrashReportPanel)
+			pTabContainer->removeTabPanel(pCrashReportPanel);
+	}
+#endif // LL_SEND_CRASH_REPORTS
+// [/SL:KB]
+
+// ## Zi: Pie menu
+	gSavedSettings.getControl("OverridePieColors")->getSignal()->connect(boost::bind(&LLFloaterPreference::onPieColorsOverrideChanged, this));
+	// make sure pie color controls are enabled or greyed out properly
+	onPieColorsOverrideChanged();
+// ## Zi: Pie menu
+
 	return TRUE;
 }
+
+// ## Zi: Pie menu
+void LLFloaterPreference::onPieColorsOverrideChanged()
+{
+	BOOL enable=gSavedSettings.getBOOL("OverridePieColors");
+
+	getChild<LLColorSwatchCtrl>("pie_bg_color_override")->setEnabled(enable);
+	getChild<LLColorSwatchCtrl>("pie_selected_color_override")->setEnabled(enable);
+	getChild<LLSliderCtrl>("pie_menu_opacity")->setEnabled(enable);
+	getChild<LLSliderCtrl>("pie_menu_fade_out")->setEnabled(enable);
+}
+// ## Zi: Pie menu
 
 void LLFloaterPreference::onBusyResponseChanged()
 {
@@ -1351,6 +1383,14 @@ void LLFloaterPreference::onClickSetMiddleMouse()
 		p2t_line_editor->setValue(advanced_preferences->getString("middle_mouse"));
 	}
 }
+
+void LLFloaterPreference::onClickSetSounds()
+{
+	// Disable Enable gesture sounds checkbox if the master sound is disabled 
+	// or if sound effects are disabled.
+	getChild<LLCheckBoxCtrl>("gesture_audio_play_btn")->setEnabled(!gSavedSettings.getBOOL("MuteSounds"));
+}
+
 /*
 void LLFloaterPreference::onClickSkipDialogs()
 {
@@ -1932,6 +1972,73 @@ void LLPanelPreferenceGraphics::setHardwareDefaults()
 	LLPanelPreference::setHardwareDefaults();
 }
 
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2010-11-16 (Catznip-2.6.0a) | Added: Catznip-2.4.0b
+static LLRegisterPanelClassWrapper<LLPanelPreferenceCrashReports> t_pref_crashreports("panel_preference_crashreports");
+
+LLPanelPreferenceCrashReports::LLPanelPreferenceCrashReports()
+	: LLPanelPreference()
+{
+}
+
+BOOL LLPanelPreferenceCrashReports::postBuild()
+{
+	S32 nCrashSubmitBehavior = gCrashSettings.getS32("CrashSubmitBehavior");
+
+	LLCheckBoxCtrl* pSendCrashReports = getChild<LLCheckBoxCtrl>("checkSendCrashReports");
+	pSendCrashReports->set(CRASH_BEHAVIOR_NEVER_SEND != nCrashSubmitBehavior);
+	pSendCrashReports->setCommitCallback(boost::bind(&LLPanelPreferenceCrashReports::refresh, this));
+
+	LLCheckBoxCtrl* pSendAlwaysAsk = getChild<LLCheckBoxCtrl>("checkSendCrashReportsAlwaysAsk");
+	pSendAlwaysAsk->set(CRASH_BEHAVIOR_ASK == nCrashSubmitBehavior);
+
+	LLCheckBoxCtrl* pSendSettings = getChild<LLCheckBoxCtrl>("checkSendSettings");
+	pSendSettings->set(gCrashSettings.getBOOL("CrashSubmitSettings"));
+
+	LLCheckBoxCtrl* pSendName = getChild<LLCheckBoxCtrl>("checkSendName");
+	pSendName->set(gCrashSettings.getBOOL("CrashSubmitName"));
+
+	refresh();
+
+	return LLPanelPreference::postBuild();
+}
+
+void LLPanelPreferenceCrashReports::refresh()
+{
+#if LL_WINDOWS
+	LLCheckBoxCtrl* pSendCrashReports = getChild<LLCheckBoxCtrl>("checkSendCrashReports");
+	pSendCrashReports->setEnabled(TRUE);
+
+	bool fEnable = pSendCrashReports->get();
+	getChild<LLUICtrl>("comboSaveMiniDumpType")->setEnabled(fEnable);
+	getChild<LLUICtrl>("checkSendCrashReportsAlwaysAsk")->setEnabled(fEnable);
+	getChild<LLUICtrl>("checkSendSettings")->setEnabled(fEnable);
+	getChild<LLUICtrl>("checkSendName")->setEnabled(fEnable);
+#endif // LL_WINDOWS
+}
+
+void LLPanelPreferenceCrashReports::apply()
+{
+#if LL_WINDOWS
+	LLCheckBoxCtrl* pSendCrashReports = getChild<LLCheckBoxCtrl>("checkSendCrashReports");
+	LLCheckBoxCtrl* pSendAlwaysAsk = getChild<LLCheckBoxCtrl>("checkSendCrashReportsAlwaysAsk");
+	if (pSendCrashReports->get())
+		gCrashSettings.setS32("CrashSubmitBehavior", (pSendAlwaysAsk->get()) ? CRASH_BEHAVIOR_ASK : CRASH_BEHAVIOR_ALWAYS_SEND);
+	else
+		gCrashSettings.setS32("CrashSubmitBehavior", CRASH_BEHAVIOR_NEVER_SEND);
+
+	LLCheckBoxCtrl* pSendSettings = getChild<LLCheckBoxCtrl>("checkSendSettings");
+	gCrashSettings.setBOOL("CrashSubmitSettings", pSendSettings->get());
+
+	LLCheckBoxCtrl* pSendName = getChild<LLCheckBoxCtrl>("checkSendName");
+	gCrashSettings.setBOOL("CrashSubmitName", pSendName->get());
+#endif // LL_WINDOWS
+}
+
+void LLPanelPreferenceCrashReports::cancel()
+{
+}
+// [/SL:KB]
+
 // <KB> - Catznip Viewer-Skins 
 
 static LLRegisterPanelClassWrapper<LLPanelPreferenceSkins> t_pref_skins("panel_preference_skins");
@@ -1941,7 +2048,6 @@ LLPanelPreferenceSkins::LLPanelPreferenceSkins() : LLPanelPreference(), m_pSkinC
 {
 	m_Skin = gSavedSettings.getString("SkinCurrent");
 	m_SkinTheme = gSavedSettings.getString("SkinCurrentTheme");
-	llinfos << "AO: SKINS: LLPanelPreferenceSkins, launching" << llendl;
 	const std::string strSkinsPath = gDirUtilp->getSkinBaseDir() + gDirUtilp->getDirDelimiter() + "skins.xml";
 	llifstream fileSkins(strSkinsPath, std::ios::binary);
 	if (fileSkins.is_open())
@@ -1993,6 +2099,13 @@ void LLPanelPreferenceSkins::onSkinChanged()
 	m_SkinTheme = "default";
 	refreshSkinThemeList();
 	onSkinThemeChanged(); // make sure we initialize a theme for our new skin
+	
+	//AO: Some crude hardcoded preferences per skin. We will remove these and replace them with "basic mode"-style behaviors in the 2.6 mergeup
+	if ((m_Skin.compare("metaharper") == 0) || (m_Skin.compare("metaharpersidetabs") == 0) || (m_Skin.compare("starlight") == 0))
+	{
+		llinfos << "removing menubar location" << llendl;
+		gSavedSettings.setBOOL("ShowMenuBarLocation", FALSE);
+	}
 }
 
 void LLPanelPreferenceSkins::onSkinThemeChanged()

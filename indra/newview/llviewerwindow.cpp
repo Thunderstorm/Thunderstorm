@@ -208,9 +208,6 @@
 #include <tchar.h> // For Unicode conversion methods
 #endif
 
-// <edit>
-#include "llfloaterinspecttexture.h"
-// </edit>
 //
 // Globals
 //

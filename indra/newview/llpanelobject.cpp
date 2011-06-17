@@ -68,8 +68,9 @@
 #include "llviewercontrol.h"
 #include "lluictrlfactory.h"
 //#include "llfirstuse.h"
-// [RLVa:KB] - Checked: 2010-03-31 (RLVa-1.2.0c)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
+#include "llvoavatarself.h"
 // [/RLVa:KB]
 
 #include "lldrawpool.h"
@@ -371,16 +372,9 @@ void LLPanelObject::getState( )
 	}
 
 	// can move or rotate only linked group with move permissions, or sub-object with move and modify perms
-	// <edit>
-	// BOOL enable_move	= objectp->permMove() /*&& !objectp->isAttachment() */&& (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
-	// BOOL enable_scale	= objectp->permMove() && objectp->permModify();
-	// BOOL enable_rotate	= objectp->permMove() && ( (objectp->permModify() && !objectp->isAttachment()) || !gSavedSettings.getBOOL("EditLinkedParts"));
-	// BOOL enable_rotate	= objectp->permMove() /*&& !objectp->isAttachment() */&& (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
-
-	BOOL enable_move	= TRUE;
-	BOOL enable_scale	= TRUE;
-	BOOL enable_rotate	= TRUE;
-	// </edit>
+	BOOL enable_move	= objectp->permMove() && !objectp->isAttachment() && (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
+	BOOL enable_scale	= objectp->permMove() && objectp->permModify();
+	BOOL enable_rotate	= objectp->permMove() && ( (objectp->permModify() && !objectp->isAttachment()) || !gSavedSettings.getBOOL("EditLinkedParts"));
 
 	S32 selected_count = LLSelectMgr::getInstance()->getSelection()->getObjectCount();
 	BOOL single_volume = (LLSelectMgr::getInstance()->selectionAllPCode( LL_PCODE_VOLUME ))

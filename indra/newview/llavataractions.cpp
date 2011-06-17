@@ -77,6 +77,9 @@
 #include "llvoavatar.h"
 #include "llworld.h"
 #include "llviewermenu.h"
+// [RLVa:KB] - Checked: 2011-04-11 (RLVa-1.3.0h) | Added: RLVa-1.3.0h
+#include "rlvhandler.h"
+// [/RLVa:KB]
 
 // static
 void LLAvatarActions::requestFriendshipDialog(const LLUUID& id, const std::string& name)
@@ -200,6 +203,19 @@ void LLAvatarActions::startIM(const LLUUID& id)
 	if (id.isNull())
 		return;
 
+// [RLVa:KB] - Checked: 2011-04-11 (RLVa-1.3.0h) | Added: RLVa-1.3.0h
+	if ( (rlv_handler_t::isEnabled()) && (!gRlvHandler.canStartIM(id)) )
+	{
+		LLUUID idSession = gIMMgr->computeSessionID(IM_NOTHING_SPECIAL, id);
+		if ( (idSession.notNull()) && (!gIMMgr->hasSession(idSession)) )
+		{
+			make_ui_sound("UISndInvalidOp");
+			RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_STARTIM, LLSD().with("RECIPIENT", LLSLURL("agent", id, "completename").getSLURLString()));
+			return;
+		}
+	}
+// [/RLVa:KB]
+
 	LLAvatarNameCache::get(id,
 		boost::bind(&on_avatar_name_cache_start_im, _1, _2));
 }
@@ -236,6 +252,20 @@ void LLAvatarActions::startCall(const LLUUID& id)
 	{
 		return;
 	}
+
+// [RLVa:KB] - Checked: 2011-04-11 (RLVa-1.3.0h) | Added: RLVa-1.3.0h
+	if ( (rlv_handler_t::isEnabled()) && (!gRlvHandler.canStartIM(id)) )
+	{
+		LLUUID idSession = gIMMgr->computeSessionID(IM_NOTHING_SPECIAL, id);
+		if ( (idSession.notNull()) && (!gIMMgr->hasSession(idSession)) )
+		{
+			make_ui_sound("UISndInvalidOp");
+			RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_STARTIM, LLSD().with("RECIPIENT", LLSLURL("agent", id, "completename").getSLURLString()));
+			return;
+		}
+	}
+// [/RLVa:KB]
+
 	LLAvatarNameCache::get(id,
 		boost::bind(&on_avatar_name_cache_start_call, _1, _2));
 }
@@ -252,7 +282,17 @@ void LLAvatarActions::startAdhocCall(const uuid_vec_t& ids)
 	LLDynamicArray<LLUUID> id_array;
 	for (uuid_vec_t::const_iterator it = ids.begin(); it != ids.end(); ++it)
 	{
-		id_array.push_back(*it);
+// [RLVa:KB] - Checked: 2011-04-11 (RLVa-1.3.0h) | Added: RLVa-1.3.0h
+		const LLUUID& idAgent = *it;
+		if ( (rlv_handler_t::isEnabled()) && (!gRlvHandler.canStartIM(idAgent)) )
+		{
+			make_ui_sound("UISndInvalidOp");
+			RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_STARTCONF, LLSD().with("RECIPIENT", LLSLURL("agent", idAgent, "completename").getSLURLString()));
+			return;
+		}
+		id_array.push_back(idAgent);
+// [/RLVa:KB]
+//		id_array.push_back(*it);
 	}
 
 	// create the new ad hoc voice session
@@ -297,7 +337,17 @@ void LLAvatarActions::startConference(const uuid_vec_t& ids)
 	LLDynamicArray<LLUUID> id_array;
 	for (uuid_vec_t::const_iterator it = ids.begin(); it != ids.end(); ++it)
 	{
-		id_array.push_back(*it);
+// [RLVa:KB] - Checked: 2011-04-11 (RLVa-1.3.0h) | Added: RLVa-1.3.0h
+		const LLUUID& idAgent = *it;
+		if ( (rlv_handler_t::isEnabled()) && (!gRlvHandler.canStartIM(idAgent)) )
+		{
+			make_ui_sound("UISndInvalidOp");
+			RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_STARTCONF, LLSD().with("RECIPIENT", LLSLURL("agent", idAgent, "completename").getSLURLString()));
+			return;
+		}
+		id_array.push_back(idAgent);
+// [/RLVa:KB]
+//		id_array.push_back(*it);
 	}
 	const std::string title = LLTrans::getString("conference-title");
 	LLUUID session_id = gIMMgr->addSession(title, IM_SESSION_CONFERENCE_START, ids[0], id_array);
@@ -1082,7 +1132,7 @@ bool LLAvatarActions::canLandFreezeOrEject(const LLUUID& idAgent)
 {
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
-	return canEstateKickOrTeleportHomeMultiple(idAgents);
+	return canLandFreezeOrEjectMultiple(idAgents);
 }
 
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
@@ -1119,6 +1169,7 @@ bool LLAvatarActions::canLandFreezeOrEjectMultiple(uuid_vec_t& idAgents, bool fF
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
 void LLAvatarActions::landEject(const LLUUID& idAgent)
 {
+	llinfos << "landeject " << idAgent << llendl;
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
 	landEjectMultiple(idAgents);
@@ -1129,7 +1180,10 @@ void LLAvatarActions::landEjectMultiple(const uuid_vec_t& idAgents)
 {
 	uuid_vec_t idEjectAgents(idAgents);
 	if (!canLandFreezeOrEjectMultiple(idEjectAgents, true))
+	{
+		llwarns << "Not allowed to eject" << llendl;
 		return;
+	}
 
 	LLSD args, payload; std::string strMsgName, strResidents; bool fBanEnabled = false;
 	for (uuid_vec_t::const_iterator itAgent = idEjectAgents.begin(); itAgent != idEjectAgents.end(); ++itAgent)
@@ -1143,7 +1197,7 @@ void LLAvatarActions::landEjectMultiple(const uuid_vec_t& idAgents)
 
 		if (idEjectAgents.begin() != itAgent)
 			strResidents += "\n";
-		strResidents += LLSLURL("agent", idAgent, "completename").getSLURLString();
+		strResidents += LLSLURL("agent", idAgent, (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? "completename" : "rlvanonym").getSLURLString();
 		payload["ids"].append(*itAgent);
 	}
 
@@ -1199,6 +1253,7 @@ bool LLAvatarActions::callbackLandEject(const LLSD& notification, const LLSD& re
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
 void LLAvatarActions::landFreeze(const LLUUID& idAgent)
 {
+	llinfos << "landfreezing " << idAgent << llendl;
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
 	landFreezeMultiple(idAgents);
@@ -1217,7 +1272,7 @@ void LLAvatarActions::landFreezeMultiple(const uuid_vec_t& idAgents)
 		const LLUUID& idAgent = *itAgent;
 		if (idEjectAgents.begin() != itAgent)
 			strResidents += "\n";
-		strResidents += LLSLURL("agent", idAgent, "completename").getSLURLString();
+		strResidents += LLSLURL("agent", idAgent, (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? "completename" : "rlvanonym").getSLURLString();
 		payload["ids"].append(*itAgent);
 	}
 
@@ -1307,7 +1362,7 @@ bool LLAvatarActions::canEstateKickOrTeleportHome(const LLUUID& idAgent)
 {
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
-	return canLandFreezeOrEjectMultiple(idAgents);
+	return canEstateKickOrTeleportHomeMultiple(idAgents);
 }
 
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
@@ -1338,6 +1393,7 @@ bool LLAvatarActions::canEstateKickOrTeleportHomeMultiple(uuid_vec_t& idAgents, 
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
 void LLAvatarActions::estateKick(const LLUUID& idAgent)
 {
+	llinfos << "estatekick " << idAgent << llendl;
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
 	estateKickMultiple(idAgents);
@@ -1356,7 +1412,7 @@ void LLAvatarActions::estateKickMultiple(const uuid_vec_t& idAgents)
 		const LLUUID& idAgent = *itAgent;
 		if (idEjectAgents.begin() != itAgent)
 			strResidents += "\n";
-		strResidents += LLSLURL("agent", idAgent, "completename").getSLURLString();
+		strResidents += LLSLURL("agent", idAgent, (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? "completename" : "rlvanonym").getSLURLString();
 		payload["ids"].append(*itAgent);
 	}
 
@@ -1399,6 +1455,7 @@ bool LLAvatarActions::callbackEstateKick(const LLSD& notification, const LLSD& r
 // static - Checked: 2010-12-03 (Catznip-2.4.0g) | Added: Catznip-2.4.0g
 void LLAvatarActions::estateTeleportHome(const LLUUID& idAgent)
 {
+	llinfos << "estateTpHome " << idAgent << llendl;
 	uuid_vec_t idAgents;
 	idAgents.push_back(idAgent);
 	estateTeleportHomeMultiple(idAgents);
@@ -1417,7 +1474,7 @@ void LLAvatarActions::estateTeleportHomeMultiple(const uuid_vec_t& idAgents)
 		const LLUUID& idAgent = *itAgent;
 		if (idEjectAgents.begin() != itAgent)
 			strResidents += "\n";
-		strResidents += LLSLURL("agent", idAgent, "completename").getSLURLString();
+		strResidents += LLSLURL("agent", idAgent, (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? "completename" : "rlvanonym").getSLURLString();
 		payload["ids"].append(*itAgent);
 	}
 

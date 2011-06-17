@@ -100,8 +100,9 @@
 #include "lltrans.h"
 #include "llsdutil.h"
 #include "llmediaentry.h"
-// [RLVa:KB] - Checked: 2010-03-27 (RLVa-1.2.0b)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
+#include "rlvlocks.h"
 // [/RLVa:KB]
 
 //#define DEBUG_UPDATE_TYPE
@@ -4439,7 +4440,7 @@ void LLViewerObject::setParticleSource(const LLPartSysData& particle_parameters,
 			LLViewerTexture* image;
 			if (mPartSourcep->mPartSysData.mPartImageID == LLUUID::null)
 			{
-				image = LLViewerTextureManager::getFetchedTextureFromFile("pixiesmall.tga");
+				image = LLViewerTextureManager::getFetchedTextureFromFile("pixiesmall.j2c");
 			}
 			else
 			{

@@ -5767,6 +5767,7 @@ Do you want to keep it? "Block" will block any more offers or messages from [NAM
   <notification
    icon="notify.tga"
    name="UserGiveItem"
+   label="Inventory offer from [NAME_LABEL]"
    type="offer">
 [NAME_SLURL] has given you this [OBJECTTYPE]:
 [ITEM_SLURL]
@@ -5822,6 +5823,7 @@ Do you want to keep it? "Block" will block any more offers or messages from [NAM
   <notification
    icon="notify.tga"
    name="TeleportOffered"
+   label="Teleport offer from [NAME_LABEL]"
    type="offer">
 [NAME_SLURL] has offered to teleport you to their location:
 
@@ -5868,6 +5870,7 @@ Do you want to keep it? "Block" will block any more offers or messages from [NAM
   <notification
    icon="notify.tga"
    name="OfferFriendship"
+   label="Friendship offer from [NAME_LABEL]"
    type="offer">
 [NAME_SLURL] is offering friendship.
 
@@ -5896,6 +5899,7 @@ Do you want to keep it? "Block" will block any more offers or messages from [NAM
   <notification
    icon="notify.tga"
    name="OfferFriendshipNoMessage"
+   label="Friendship offer from [NAME_LABEL]"
    persist="true"
    type="notify">
 [NAME_SLURL] is offering friendship.
@@ -7220,6 +7224,37 @@ This will send the following information to the current IM session:
     <usetemplate
      name="okbutton"
      yestext="OK"/>
+  </notification>
+
+<!-- fsdata -->
+  <notification
+   icon="alertmodal.tga"
+   name="BlockLoginInfo"
+   type="alertmodal">
+    [REASON]
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="notify.tga"
+   name="FireStormReqInfo"
+   type="notify">
+    [NAME] is requesting that you send them information about your Firestorm setup.
+    (This is the same information that can be found by going to Help->ABOUT Firestorm)    
+    [REASON]
+    Would you like to send them this information?
+    <form name="form">
+      <button
+       index="0"
+       name="Yes"
+       text="Yes"/>
+      <button
+       index="1"
+       name="No"
+       text="No"/>
+    </form>
   </notification>
 
 </notifications>

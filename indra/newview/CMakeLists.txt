@@ -70,9 +70,6 @@ include_directories(
     )
 
 set(viewer_SOURCE_FILES
-# <edit>
-    llfloaterinspecttexture.cpp	
-# </edit>
     ao.cpp
     aoengine.cpp
     aoset.cpp
@@ -81,7 +78,10 @@ set(viewer_SOURCE_FILES
     floatermedialists.cpp
     fscontactsfloater.cpp
     fsareasearch.cpp
+    fsdata.cpp
     fskeywords.cpp
+    fslslbridge.cpp
+    fslslbridgerequest.cpp
     fsradarlistctrl.cpp
     llagent.cpp
     llagentaccess.cpp
@@ -601,6 +601,9 @@ set(viewer_SOURCE_FILES
     llxmlrpctransaction.cpp
     noise.cpp
 	panel_prefs_firestorm.cpp
+    piemenu.cpp
+    pieseparator.cpp
+    pieslice.cpp
     pipeline.cpp
     kvflickr.cpp
     kvfloaterflickrauth.cpp
@@ -637,9 +640,6 @@ endif (LINUX)
 set(viewer_HEADER_FILES
     CMakeLists.txt
     ViewerInstall.cmake
-# <edit>
-    llfloaterinspecttexture.h	
-# </edit>
     ao.h
     aoengine.h
     aoset.h
@@ -649,7 +649,10 @@ set(viewer_HEADER_FILES
     fscontactsfloater.h
     fsradarlistctrl.h
     fsareasearch.h
+    fsdata.h
     fskeywords.h
+    fslslbridge.h
+    fslslbridgerequest.h
     llagent.h
     llagentaccess.h
     llagentcamera.h
@@ -1165,6 +1168,9 @@ set(viewer_HEADER_FILES
     macmain.h
     noise.h
 	panel_prefs_firestorm.h
+    piemenu.h
+    pieseparator.h
+    pieslice.h
     pipeline.h
     qtoolalign.h
     rlvdefines.h
@@ -1560,13 +1566,18 @@ if (WINDOWS)
       ${SHARED_LIB_STAGING_DIR}/Release/fmod.dll
       ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/fmod.dll
       ${SHARED_LIB_STAGING_DIR}/Debug/fmod.dll
-      ${SHARED_LIB_STAGING_DIR}/Release/msvcr100.dll
-      ${SHARED_LIB_STAGING_DIR}/Release/msvcp100.dll
-	  ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/msvcr100.dll
-      ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/msvcp100.dll
-      ${SHARED_LIB_STAGING_DIR}/Debug/msvcr100d.dll
-      ${SHARED_LIB_STAGING_DIR}/Debug/msvcp100d.dll
+      ${SHARED_LIB_STAGING_DIR}/Release/msvcr80.dll
+      ${SHARED_LIB_STAGING_DIR}/Release/msvcp80.dll
+      ${SHARED_LIB_STAGING_DIR}/Release/Microsoft.VC80.CRT.manifest
+      ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/msvcr80.dll
+      ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/msvcp80.dll
+      ${SHARED_LIB_STAGING_DIR}/RelWithDebInfo/Microsoft.VC80.CRT.manifest
+      ${SHARED_LIB_STAGING_DIR}/Debug/msvcr80d.dll
+      ${SHARED_LIB_STAGING_DIR}/Debug/msvcp80d.dll
+      ${SHARED_LIB_STAGING_DIR}/Debug/Microsoft.VC80.DebugCRT.manifest
       ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/SLVoice.exe
+      ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/alut.dll
+      ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/wrap_oal.dll
       ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/vivoxsdk.dll
       ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/ortp.dll
       ${SHARED_LIB_STAGING_DIR}/${CMAKE_CFG_INTDIR}/libsndfile-1.dll

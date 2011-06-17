@@ -147,6 +147,7 @@ public:
 	//--------------------------------------------------------------------
 public:
 	//*TODO remove, is not used as of August 20, 2009
+	void			buildFullname(std::string& name) const;
 	void			buildFullnameAndTitle(std::string &name) const;
 
 	//--------------------------------------------------------------------
@@ -330,19 +331,31 @@ public:
 		DOUBLETAP_SLIDERIGHT
 	};
 
-	void			setAlwaysRun() 			{ mbAlwaysRun = true; }
-	void			clearAlwaysRun() 		{ mbAlwaysRun = false; }
-	void			setRunning() 			{ mbRunning = true; }
-	void			clearRunning() 			{ mbRunning = false; }
-	void 			sendWalkRun(bool running);
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+	void			setAlwaysRun();
+	void			setTempRun();
+	void			clearAlwaysRun();
+	void			clearTempRun();
+	void 			sendWalkRun();
+	bool			getTempRun()			{ return mbTempRun; }
+	bool			getRunning() const 		{ return (mbAlwaysRun) || (mbTempRun); }
+// [/RLVa:KB]
+//	void			setAlwaysRun() 			{ mbAlwaysRun = true; }
+//	void			clearAlwaysRun() 		{ mbAlwaysRun = false; }
+//	void			setRunning() 			{ mbRunning = true; }
+//	void			clearRunning() 			{ mbRunning = false; }
+//	void 			sendWalkRun(bool running);
 	bool			getAlwaysRun() const 	{ return mbAlwaysRun; }
-	bool			getRunning() const 		{ return mbRunning; }
+//	bool			getRunning() const 		{ return mbRunning; }
 public:
 	LLFrameTimer 	mDoubleTapRunTimer;
 	EDoubleTapRunMode mDoubleTapRunMode;
 private:
 	bool 			mbAlwaysRun; 			// Should the avatar run by default rather than walk?
-	bool 			mbRunning;				// Is the avatar trying to run right now?
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+	bool 			mbTempRun;
+// [/RLVa:KB]
+//	bool 			mbRunning;				// Is the avatar trying to run right now?
 	bool			mbTeleportKeepsLookAt;	// Try to keep look-at after teleport is complete
 
 	//--------------------------------------------------------------------
@@ -550,8 +563,13 @@ public:
 	void			teleportViaLocationLookAt(const LLVector3d& pos_global);// To a global location, preserving camera rotation
 	void 			teleportCancel();										// May or may not be allowed by server
 	bool			getTeleportKeepsLookAt() { return mbTeleportKeepsLookAt; } // Whether look-at reset after teleport
+//-TT Client LSL Bridge
+	bool			teleportBridgeLocal(LLVector3& pos_local);					// Teleport using LSL Bridge
+	bool			teleportBridgeGlobal(const LLVector3d& pos_global);				// Teleport using LSL Bridge
+//-TT
 protected:
 	bool 			teleportCore(bool is_local = false); 					// Stuff for all teleports; returns true if the teleport can proceed
+
 
 	//--------------------------------------------------------------------
 	// Teleport State

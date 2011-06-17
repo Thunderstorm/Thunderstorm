@@ -105,10 +105,12 @@
      function="InspectAvatar.EnableGod" />
   </menu_item_call>
   <menu_item_call
-   label="AvTextures"
+   label="Debug Textures"
    name="debug">
     <menu_item_call.on_click
      function="Avatar.Debug"/>
+    <menu_item_call.on_visible
+     function="IsGodCustomerService"/>
   </menu_item_call>
   <menu_item_call
    label="Find On Map"

@@ -136,10 +136,6 @@
 #include "floatermedialists.h"
 #include "fsareasearch.h"
 
-// <edit>
-#include "llfloaterinspecttexture.h"
-// </edit>
-
 void LLViewerFloaterReg::registerFloaters()
 {
 	// *NOTE: Please keep these alphabetized for easier merges
@@ -204,9 +200,6 @@ void LLViewerFloaterReg::registerFloaters()
 	LLFloaterReg::add("incoming_call", "floater_incoming_call.xml", (LLFloaterBuildFunc)&LLFloaterReg::build<LLIncomingCallDialog>);
 	LLFloaterReg::add("inventory", "floater_inventory.xml", (LLFloaterBuildFunc)&LLFloaterReg::build<LLFloaterInventory>);
 	LLFloaterReg::add("inspect", "floater_inspect.xml", (LLFloaterBuildFunc)&LLFloaterReg::build<LLFloaterInspect>);
-// <edit>
-	LLFloaterReg::add("inspect_texture",  "floater_inspect_texture.xml", (LLFloaterBuildFunc)&LLFloaterReg::build<LLFloaterInspectTexture>);
-// </edit>
 	LLInspectAvatarUtil::registerFloater();
 	LLInspectGroupUtil::registerFloater();
 	LLInspectObjectUtil::registerFloater();

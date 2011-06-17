@@ -7,11 +7,14 @@
   <menu_item_check
      label="Show Minimap above Radar"
      name="ShowRadarMinimap">
-	 <menu_item_check.on_check
-     	control="ShowRadarMinimap" />
+     <menu_item_check.on_check
+        control="ShowRadarMinimap" />
      <menu_item_check.on_click
         function="ToggleControl"
         parameter="ShowRadarMinimap" />
+     <menu_item_check.on_enable
+        function="RLV.EnableIfNot"
+        parameter="showminimap" />
   </menu_item_check>
   
   <menu_item_check
@@ -29,7 +32,8 @@
     name="radarNameFormat">
    	<menu_item_call
     	label="DisplayName"
-     	name="radarFmtDN">
+     	name="radarFmtDN"
+     	enabled_control="UseDisplayNames">
     	<menu_item_call.on_click
         	function="Radar.NameFmt" 
         	parameter="DN"/>
@@ -43,14 +47,16 @@
     </menu_item_call>
    	<menu_item_call
     	label="DisplayName (UserName)"
-     	name="radarFmtDNUN">
+     	name="radarFmtDNUN"
+     	enabled_control="UseDisplayNames">
     	<menu_item_call.on_click
         	function="Radar.NameFmt" 
         	parameter="DNUN"/>
     </menu_item_call>
    	<menu_item_call
     	label="Username (DisplayName)"
-     	name="radarFmtUNDN">
+     	name="radarFmtUNDN"
+     	enabled_control="UseDisplayNames">
     	<menu_item_call.on_click
         	function="Radar.NameFmt" 
         	parameter="UNDN"/>
@@ -59,6 +65,16 @@
   
   
   <menu_item_separator layout="topleft" />
+
+  <menu_item_check
+   label="Local chat distance ring in Minimap"
+   name="MiniMapChatRing">
+    <menu_item_check.on_check
+       control="MiniMapChatRing" />
+    <menu_item_check.on_click
+       function="ToggleControl"
+       parameter="MiniMapChatRing" />
+  </menu_item_check>
   
   <menu_item_check
      label="Report Crossing Draw Range"
@@ -78,6 +94,16 @@
      <menu_item_check.on_click
         function="ToggleControl"
         parameter="RadarReportChatRange" />
+  </menu_item_check>
+  
+  <menu_item_check
+     label="Report Crossing your Region"
+     name="RadarReportSimRange">
+	 <menu_item_check.on_check
+     	control="RadarReportSimRange" />
+     <menu_item_check.on_click
+        function="ToggleControl"
+        parameter="RadarReportSimRange" />
   </menu_item_check>
   
   <menu_item_check

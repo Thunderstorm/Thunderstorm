@@ -380,7 +380,7 @@
 		label_width="185"
 		layout="topleft"
 		left="200"
-		max_val="992"
+		max_val="1024"
 		min_val="32"
 		name="DrawDistance"
 		top="0"
@@ -780,15 +780,6 @@
       name="vbo_stream"
       tool_tip="Disabling this may improve performance when VBOs are enabled. Disabling produced observable improvement on various AMD GPUs."
      width="315" />
-    <check_box
-     control_name="RenderUseFBO"
-     height="16"
-     label="Enable Antialiasing"
-     layout="topleft"
-     left="10"
-     top_pad="5"
-     name="aa_enable"
-     width="256" />
     <text
      type="string"
      length="1"
@@ -872,7 +863,8 @@
      label_width="195"
      layout="topleft"
      left="10"
-     max_val="4096"
+     min_val="64"
+     max_val="1024"
      name="GraphicsCardTextureMemory"
      tool_tip="Amount of memory to allocate for textures. Defaults to video card memory. Reducing this may improve performance but may also make textures blurry."
      top_pad="10"
@@ -975,18 +967,35 @@
 		name="TexturesHTTP"
 		top_pad="3"
 		width="256"/>
+<!-- Max Concurent HTTP GET requests-->
+      <slider
+      control_name="ImagePipelineUseHTTPFetchMaxRequests"
+      decimal_digits="1"
+      follows="left|top"
+      height="16"
+      increment="1"
+      initial_value="16"
+      label="Max number of concurrent HTTP GET requests"
+      label_width="250"
+      layout="topleft"
+      left="20"
+      max_val="32"
+      min_val="4"
+      name="HTTPFetchMaxRequests"
+      top_pad="5"
+      width="375" />
 
 <!-- New Texture detail 5 is lowest, 0 is highest -->
      <text
       type="string"
       length="1"
-      top_pad="20"
+      top_pad="5"
       follows="top|left"
       height="18"
       width="180"
       word_wrap="true"
       layout="topleft"
-      left="10"
+      left="20"
       name="shadows_label">
         Texture Details Loaded:
       </text>
@@ -995,7 +1004,7 @@
       height="23"
       layout="topleft"
       follows="left|top"
-      left="10"
+      left="20"
       top_pad="0" 
       name="TextureDetail"
       width="150">

@@ -179,18 +179,24 @@
 	             function="Tools.StopAllAnimations" />
 	        </menu_item_call>
 	        <menu_item_call
-	         label="Force Appearance Update"
+	         label="Force Appearance Update (Rebake)"
 	         name="Rebake Texture"
 		 shortcut="control|alt|R">
 	            <menu_item_call.on_click
 	             function="Advanced.RebakeTextures" />
 	        </menu_item_call>
 		<menu_item_call
-                    label="Reset Default Avatar"
+                    label="Reset Default Male Avatar (Character Test)"
                     name="ResetDefaultAvM">
                     <menu_item_call.on_click
                      function="Advanced.TestMale" />
 		</menu_item_call>
+          <menu_item_call
+                          label="Reset Default Female Avatar (Character Test)"
+                          name="ResetDefaultAvF">
+            <menu_item_call.on_click
+             function="Advanced.TestFemale" />
+          </menu_item_call>
 	        <menu_item_check
 	         label="Show Avatar Rendering Cost"
 	         name="Avatar Rendering Cost">
@@ -208,6 +214,12 @@
                  function="Floater.Show"
                  parameter="lagmeter" />
             </menu_item_call>
+          <menu_item_call
+             label="Recreate LSL Bridge"
+             name="Recreate LSL Bridge">
+            <menu_item_call.on_click
+             function="RecreateLSLBridge"/>
+          </menu_item_call>
         </menu>
         
         <menu
@@ -1595,7 +1607,7 @@
                  parameter="character" />
             </menu_item_check>
             <menu_item_check
-             label="SurfacePath"
+             label="Surface Path"
              name="SurfacePath"
              shortcut="control|alt|shift|5">
                 <menu_item_check.on_check
@@ -2025,7 +2037,7 @@
                 <menu_item_call.on_enable
                  function="File.EnableCloseWindow" />
             </menu_item_call>
-            <menu_item_call
+            <!--<menu_item_call
              label="Close All Windows"
              name="Close All Windows"
              shortcut="control|shift|W">
@@ -2033,7 +2045,7 @@
                  function="File.CloseAllWindows" />
                 <menu_item_call.on_enable
                  function="File.EnableCloseAllWindows" />
-            </menu_item_call>
+            </menu_item_call> -->
 
             <menu_item_separator/>
 
@@ -2174,7 +2186,7 @@
         </menu_item_check>
 
         <menu_item_check
-           label="RestrainedLove API"
+           label="RestrainedLove API (RLVa)"
            name="RLV API">
               <menu_item_check.on_check
                function="RLV.CheckEnabled" />
@@ -3167,7 +3179,7 @@
                  function="Advanced.PrintTextureMemoryStats" />
             </menu_item_call>
             <menu_item_check
-             label="Double-ClickAuto-Pilot"
+             label="Double-Click Auto-Pilot"
              name="Double-ClickAuto-Pilot">
                 <menu_item_check.on_check
                  function="CheckControl"
@@ -3245,7 +3257,7 @@
                  function="Advanced.ToggleDebugKeys" />
             </menu_item_check>
             <menu_item_check
-             label="Debug WindowProc"
+             label="Debug Window Process"
              name="Debug WindowProc">
                 <menu_item_check.on_check
                  function="Advanced.CheckDebugWindowProc"
@@ -3539,8 +3551,13 @@
                 <menu_item_call.on_click
                  function="Advanced.DumpAvatarLocalTextures" />
             </menu_item_call>
-        </menu>
-
+			<menu_item_call
+			 label="Reload Avatar Cloud Particle"
+			 name="Reload Avatar Cloud Particle">
+				<menu_item_call.on_click
+				 function="Advanced.ReloadAvatarCloudParticle" />
+			</menu_item_call>
+		</menu>
         <menu_item_separator/>
 
         <menu_item_check

@@ -2071,10 +2071,11 @@ Requests name of an avatar.  When data is available the dataserver event will be
 	<string name="Stomach">Stomach</string>
 	<string name="Left Pec">Left Pec</string>
 	<string name="Right Pec">Right Pec</string>
+	<string name="Bridge">Bridge</string>
 	<string name="Invalid Attachment">Invalid Attachment Point</string>
 
   <!-- Avatar age computation, see LLDateUtil::ageFromDate -->
-  <string name="YearsMonthsOld">[AGEYEARS] [AGEMONTHS] old</string>
+  <string name="YearsMonthsOld">[AGEYEARS] [AGEMONTHS]</string>
   <string name="YearsOld">[AGEYEARS] old</string>
   <string name="MonthsOld">[AGEMONTHS] old</string>
   <string name="WeeksOld">[AGEWEEKS] old</string>
@@ -2402,6 +2403,7 @@ Expected .wav, .tga, .bmp, .jpg, .jpeg, or .bvh
 	<!-- media -->
 	<string name="Multiple Media">Multiple Media</string>
 	<string name="Play Media">Play/Pause Media</string>
+	<string name="StreamtitleNowPlaying">Now playing:</string>
 
 	<!-- OSMessageBox messages -->
 	<string name="MBCmdLineError">

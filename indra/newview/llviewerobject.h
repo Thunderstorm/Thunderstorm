@@ -602,11 +602,6 @@ protected:
 	void unpackParticleSource(LLDataPacker &dp, const LLUUID& owner_id);
 	void deleteParticleSource();
 	void setParticleSource(const LLPartSysData& particle_parameters, const LLUUID& owner_id);
-public :
-// <edit>
-	LLPointer<LLViewerPartSourceScript>		mPartSourcep;	// Particle source associated with this object.
-	LLAudioSourceVO* mAudioSourcep;
-// </edit>
 
 private:
 	void setNameValueList(const std::string& list);		// clears nv pairs and then individually adds \n separated NV pairs from \0 terminated string
@@ -624,10 +619,9 @@ protected:
 
 	// extra data sent from the sim...currently only used for tree species info
 	U8* mData;
-// <edit>
-//	LLPointer<LLViewerPartSourceScript>		mPartSourcep;	// Particle source associated with this object.
-//	LLAudioSourceVO* mAudioSourcep;
-// </edit>
+
+	LLPointer<LLViewerPartSourceScript>		mPartSourcep;	// Particle source associated with this object.
+	LLAudioSourceVO* mAudioSourcep;
 	F32				mAudioGain;
 	
 	F32				mAppAngle;	// Apparent visual arc in degrees
