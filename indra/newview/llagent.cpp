@@ -77,9 +77,13 @@
 #include "llwindow.h"
 #include "llworld.h"
 #include "llworldmap.h"
-// [RLVa:KB] - Checked: 2010-03-07 (RLVa-1.2.0c)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
+#include "rlvhelper.h"
 // [/RLVa:KB]
+//-TT Client LSL Bridge
+#include "fslslbridge.h"
+//-TT
 #include "kcwlinterface.h"
 
 using namespace LLVOAvatarDefines;
@@ -174,7 +178,10 @@ LLAgent::LLAgent() :
 	mDoubleTapRunMode(DOUBLETAP_NONE),
 
 	mbAlwaysRun(false),
-	mbRunning(false),
+//	mbRunning(false),
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+	mbTempRun(false),
+// [/RLVa:KB]
 	mbTeleportKeepsLookAt(false),
 
 	mAgentAccess(gSavedSettings),
@@ -2447,6 +2454,14 @@ void LLAgent::handleMaturity(const LLSD& newvalue)
 
 //----------------------------------------------------------------------------
 
+void LLAgent::buildFullname(std::string& name) const
+{
+	if (gAgentAvatarp)
+	{
+		name = gAgentAvatarp->getFullname();
+	}
+}
+
 //*TODO remove, is not used anywhere as of August 20, 2009
 void LLAgent::buildFullnameAndTitle(std::string& name) const
 {
@@ -2689,7 +2704,36 @@ void LLAgent::sendAnimationRequest(const LLUUID &anim_id, EAnimRequest request)
 	sendReliableMessage();
 }
 
-void LLAgent::sendWalkRun(bool running)
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+void LLAgent::setAlwaysRun()
+{
+	mbAlwaysRun = (!rlv_handler_t::isEnabled()) || (!gRlvHandler.hasBehaviour(RLV_BHVR_ALWAYSRUN));
+	sendWalkRun();
+}
+
+void LLAgent::setTempRun()
+{
+	mbTempRun = (!rlv_handler_t::isEnabled()) || (!gRlvHandler.hasBehaviour(RLV_BHVR_TEMPRUN));
+	sendWalkRun();
+}
+
+void LLAgent::clearAlwaysRun()
+{
+	mbAlwaysRun = false;
+	sendWalkRun();
+}
+
+void LLAgent::clearTempRun()
+{
+	mbTempRun = false;
+	sendWalkRun();
+}
+// [/RLVa:KB]
+
+//void LLAgent::sendWalkRun(bool running)
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+void LLAgent::sendWalkRun()
+// [/RLVa:KB]
 {
 	LLMessageSystem* msgsys = gMessageSystem;
 	if (msgsys)
@@ -2698,7 +2742,10 @@ void LLAgent::sendWalkRun(bool running)
 		msgsys->nextBlockFast(_PREHASH_AgentData);
 		msgsys->addUUIDFast(_PREHASH_AgentID, getID());
 		msgsys->addUUIDFast(_PREHASH_SessionID, getSessionID());
-		msgsys->addBOOLFast(_PREHASH_AlwaysRun, BOOL(running) );
+//		msgsys->addBOOLFast(_PREHASH_AlwaysRun, BOOL(running) );
+// [RLVa:KB] - Checked: 2011-05-11 (RLVa-1.3.0i) | Added: RLVa-1.3.0i
+		msgsys->addBOOLFast(_PREHASH_AlwaysRun, BOOL(getRunning()) );
+// [/RLVa:KB]
 		sendReliableMessage();
 	}
 }
@@ -3369,6 +3416,25 @@ void LLAgent::clearVisualParams(void *data)
 //---------------------------------------------------------------------------
 // Teleport
 //---------------------------------------------------------------------------
+//-TT Client LSL Bridge
+bool LLAgent::teleportBridgeLocal(LLVector3& pos_local)
+{
+	std::stringstream msgstream;
+	msgstream << std::setiosflags(std::ios::fixed) << std::setprecision(6); 
+	msgstream << pos_local.mV[VX] << ", " << pos_local.mV[VY] << ", "  << pos_local.mV[VZ];
+
+	return FSLSLBridge::instance().viewerToLSL("llMoveToTarget|" + msgstream.str());
+}
+
+bool LLAgent::teleportBridgeGlobal(const LLVector3d& pos_global)
+{
+	U64 region_handle = to_region_handle(pos_global);
+	LLVector3 pos_local = (LLVector3)(pos_global - from_region_handle(region_handle));
+
+	return teleportBridgeLocal(pos_local);
+
+}
+//-TT Client LSL Bridge
 
 // teleportCore() - stuff to do on any teleport
 // protected
@@ -3485,7 +3551,7 @@ void LLAgent::teleportViaLandmark(const LLUUID& landmark_asset_id)
 		                                   : gRlvHandler.hasBehaviour(RLV_BHVR_TPLM) && gRlvHandler.hasBehaviour(RLV_BHVR_TPLOC) ) ||
 		   ((gRlvHandler.hasBehaviour(RLV_BHVR_UNSIT)) && (isAgentAvatarValid()) && (gAgentAvatarp->isSitting())) ))
 	{
-		RlvUtil::notifyBlockedTeleport();
+		RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_TELEPORT);
 		return;
 	}
 // [/RLVa:KB]
@@ -3562,7 +3628,7 @@ void LLAgent::teleportViaLocation(const LLVector3d& pos_global)
 		     ( (isAgentAvatarValid()) && (gAgentAvatarp->isSitting()) && 
 			   (gRlvHandler.hasBehaviourExcept(RLV_BHVR_UNSIT, gRlvHandler.getCurrentObject()))) )
 		{
-			RlvUtil::notifyBlockedTeleport();
+			RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_TELEPORT);
 			return;
 		}
 
@@ -3575,6 +3641,7 @@ void LLAgent::teleportViaLocation(const LLVector3d& pos_global)
 
 	LLViewerRegion* regionp = getRegion();
 	U64 handle = to_region_handle(pos_global);
+	bool isLocal = (regionp->getHandle() == to_region_handle_global((F32)pos_global.mdV[VX], (F32)pos_global.mdV[VY]));
 	LLSimInfo* info = LLWorldMap::getInstance()->simInfoFromHandle(handle);
 	if(regionp && info)
 	{
@@ -3585,8 +3652,7 @@ void LLAgent::teleportViaLocation(const LLVector3d& pos_global)
 			(F32)(pos_global.mdV[VZ]));
 		teleportRequest(handle, pos_local);
 	}
-	else if(regionp && 
-		teleportCore(regionp->getHandle() == to_region_handle_global((F32)pos_global.mdV[VX], (F32)pos_global.mdV[VY])))
+	else if(regionp && teleportCore(isLocal))
 	{
 		llwarns << "Using deprecated teleportlocationrequest." << llendl; 
 		// send the message
@@ -3610,6 +3676,12 @@ void LLAgent::teleportViaLocation(const LLVector3d& pos_global)
 		msg->addVector3Fast(_PREHASH_LookAt, pos);
 		sendReliableMessage();
 	}
+//-TT Client LSL Bridge
+	if (gSavedSettings.getBOOL("UseLSLBridge") && isLocal)
+	{
+		teleportBridgeGlobal(pos_global);
+	}
+//-TT 
 }
 
 // Teleport to global position, but keep facing in the same direction 
@@ -3620,7 +3692,7 @@ void LLAgent::teleportViaLocationLookAt(const LLVector3d& pos_global)
 	if ( (rlv_handler_t::isEnabled()) && (!RlvUtil::isForceTp()) && 
 		 ((gRlvHandler.hasBehaviour(RLV_BHVR_SITTP)) || (!gRlvHandler.canStand())) )
 	{
-		RlvUtil::notifyBlockedTeleport();
+		RlvUtil::notifyBlocked(RLV_STRING_BLOCKED_TELEPORT);
 		return;
 	}
 // [/RLVa:KB]
@@ -3630,6 +3702,14 @@ void LLAgent::teleportViaLocationLookAt(const LLVector3d& pos_global)
 	U64 region_handle = to_region_handle(pos_global);
 	LLVector3 pos_local = (LLVector3)(pos_global - from_region_handle(region_handle));
 	teleportRequest(region_handle, pos_local, getTeleportKeepsLookAt());
+
+//-TT Client LSL Bridge
+	if (gSavedSettings.getBOOL("UseLSLBridge"))
+	{
+		if (region_handle == to_region_handle(getPositionGlobal()))
+			teleportBridgeLocal(pos_local);
+	}
+//-TT 
 }
 
 void LLAgent::setTeleportState(ETeleportState state)

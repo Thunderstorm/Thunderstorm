@@ -3,7 +3,7 @@
  legacy_header_height="18"
  can_minimize="false"
  can_resize="true"
- height="320"
+ height="290"
  layout="topleft"
  min_height="290"
  min_width="410"
@@ -78,26 +78,14 @@
      name="Blank"
      top_pad="5"
      width="80" />
-	 
-    <button
-     follows="left|bottom"
-     height="20"
-     label="CpToInv"
-     label_selected="CpToInv"
-     layout="topleft"
-     left_pad="4"
-     name="CpToInv"
-     top_delta="0"
-     width="80" />	 
-	 
          <button
      follows="left|bottom"
      height="28"
      image_selected="eye_button_active.tga"
      image_unselected="eye_button_inactive.tga"
      layout="topleft"
-     left="104"
-     top_delta="25"
+     left_pad="50"
+     top_delta="3"
      name="Pipette"
      width="28" />
    <check_box
@@ -108,7 +96,7 @@
      layout="topleft"
      left="4"
      name="apply_immediate_check"
-     top="264"
+     top="262"
      width="120" />
     <filter_editor
      follows="left|top|right"
@@ -159,18 +147,4 @@
      left_pad="5"
      name="Cancel"
      width="100" />
-	 
-	 
-	 <line_editor bevel_style="in" border_style="line" border_thickness="1" bottom="315"
-	     left="8" follows="bottom" font="SansSerif" handle_edit_keys_directly="false"
-	     height="20" max_length="36" mouse_opaque="true" name="texture_uuid"
-	     select_all_on_focus_received="false" width="282" />
-	<button enabled="true" follows="right|bottom" font="SansSerif"
-	     height="20" label="Apply UUID" label_selected="Apply UUID"
-	     right="400" bottom_delta="0" mouse_opaque="true" 
-	     name="ApplyUUID" scale_image="true" width="100" />
-	 
-	 
-	 
-	 
 </floater>

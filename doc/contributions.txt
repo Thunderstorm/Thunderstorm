@@ -160,6 +160,7 @@ Argent Stonecutter
 	VWR-68
 Armin Weatherwax
 	VWR-8436
+	VWR-25923
 Asuka Neely
 	VWR-3434
 	VWR-8179
@@ -426,6 +427,8 @@ Kunnis Basiat
 	VWR-102
 Latif Khalifa
 	VWR-5370
+leliel Mirihi
+	STORM-1100
 Lisa Lowe
 	CT-218
 	CT-219
@@ -723,6 +726,8 @@ Strife Onizuka
 	VWR-2265
 	VWR-4111
 	SNOW-691
+TankMaster Finesmith
+	STORM-1100
 Tayra Dagostino
 	SNOW-517
 	SNOW-543
@@ -780,6 +785,8 @@ Tofu Buzzard
 	STORM-546
 TraductoresAnonimos Alter
 	CT-324
+TriloByte Zanzibar
+	STORM-1100
 Tue Torok
 	CT-68
 	CT-69
@@ -794,6 +801,7 @@ Twisted Laws
 	STORM-844
 	STORM-643
 	STORM-954
+	STORM-1103
 Vadim Bigbear
 	VWR-2681
 Vector Hastings

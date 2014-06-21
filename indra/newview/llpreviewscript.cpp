@@ -85,8 +85,9 @@
 #include "lltrans.h"
 #include "llviewercontrol.h"
 #include "llappviewer.h"
-// [RLVa:KB] - Checked: 2010-09-28 (RLVa-1.2.1f)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
+#include "rlvlocks.h"
 // [/RLVa:KB]
 
 const std::string HELLO_LSL =
@@ -2080,6 +2081,23 @@ void LLLiveLSLEditor::saveIfNeeded(bool sync /*= true*/)
 		uploadAssetLegacy(filename, object, tid, is_running);
 	}
 }
+
+//-TT //AO Custom Update Agent Inventory via capability
+void LLLiveLSLEditor::uploadAssetViaCapsStatic(const std::string& url,
+										 const std::string& filename,
+										 const LLUUID& task_id,
+										 const LLUUID& item_id,
+										 const std::string& is_mono,
+										 BOOL is_running)
+{
+	LLSD body;
+	body["item_id"] = item_id;
+	body["target"] = "lsl2";
+	llinfos << "Upload caps body=" << body << " url=" << url << " id= " << item_id << llendl;
+	LLHTTPClient::post(url, body, 
+		new LLUpdateAgentInventoryResponder(body, filename, LLAssetType::AT_LSL_TEXT));
+}
+//-TT
 
 void LLLiveLSLEditor::uploadAssetViaCaps(const std::string& url,
 										 const std::string& filename,

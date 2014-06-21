@@ -60,8 +60,7 @@ if (WINDOWS)
   set_target_properties(
     media_plugin_quicktime
     PROPERTIES
-    LINK_FLAGS "/MANIFEST:NO /NODEFAULTLIB:LIBCMT"
-    LINK_FLAGS_DEBUG "/MANIFEST:NO /NODEFAULTLIB:\"LIBCMT;LIBCMTD\""
+    LINK_FLAGS "/MANIFEST:NO"
     )
 endif (WINDOWS)
 

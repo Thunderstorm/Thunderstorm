@@ -190,6 +190,9 @@
 // [RLVa:KB] - Checked: 2010-02-27 (RLVa-1.2.0a)
 #include "rlvhandler.h"
 // [/RLVa:KB]
+//-TT Bridge 
+#include "fslslbridge.h"
+//-TT
 
 #include "lllogin.h"
 #include "llevents.h"
@@ -202,6 +205,7 @@
 #include "llnotificationmanager.h"
 
 #include "streamtitledisplay.h"
+#include "fsdata.h"
 
 //
 // exported globals
@@ -379,6 +383,9 @@ bool idle_startup()
 		//
 		// Initialize stuff that doesn't need data from simulators
 		//
+
+		// fsdata: load dynamic xml data
+		FSData::getInstance()->startDownload();
 
 // [RLVa:KB] - Checked: 2010-02-27 (RLVa-1.2.0a) | Modified: RLVa-0.2.1d
 		if ( (gSavedSettings.controlExists(RLV_SETTING_MAIN)) && (gSavedSettings.getBOOL(RLV_SETTING_MAIN)) )
@@ -862,7 +869,15 @@ bool idle_startup()
 		}
 		gSavedSettings.setBOOL("RememberPassword", gRememberPassword);                                                 
 		LL_INFOS("AppInit") << "Attempting login as: " << userid << LL_ENDL;                                           
-		gDebugInfo["LoginName"] = userid;
+//		gDebugInfo["LoginName"] = userid;                                                                              
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2010-11-16 (Catznip-2.6.0a) | Added: Catznip-2.4.0b
+		if (gCrashSettings.getBOOL("CrashSubmitName"))
+		{
+			// Only include the agent name if the user consented
+			gDebugInfo["LoginName"] = userid;                                                                              
+		}
+// [/SL:KB]
+
 		// We don't save this version of the title because it'll
 		//  be replaced later, we hope. -- TS
 		size_t underscore_pos = userid.find_first_of('_');
@@ -2019,6 +2034,11 @@ bool idle_startup()
 	{
 		set_startup_status(1.0, "", "");
 
+//-TT Client LSL Bridge
+		if (gSavedSettings.getBOOL("UseLSLBridge"))
+			FSLSLBridge::instance().initBridge();
+//-TT
+
 		// Let the map know about the inventory.
 		LLFloaterWorldMap* floater_world_map = LLFloaterWorldMap::getInstance();
 		if(floater_world_map)
@@ -2946,7 +2966,14 @@ bool process_login_success_response()
 	// unpack login data needed by the application
 	text = response["agent_id"].asString();
 	if(!text.empty()) gAgentID.set(text);
-	gDebugInfo["AgentID"] = text;
+//	gDebugInfo["AgentID"] = text;
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2010-11-16 (Catznip-2.6.0a) | Added: Catznip-2.4.0b
+	if (gCrashSettings.getBOOL("CrashSubmitName"))
+	{
+		// Only include the agent UUID if the user consented
+		gDebugInfo["AgentID"] = text;
+	}
+// [/SL:KB]
 	
 	// Agent id needed for parcel info request in LLUrlEntryParcel
 	// to resolve parcel name.
@@ -2954,7 +2981,7 @@ bool process_login_success_response()
 
 	text = response["session_id"].asString();
 	if(!text.empty()) gAgentSessionID.set(text);
-	gDebugInfo["SessionID"] = text;
+//	gDebugInfo["SessionID"] = text;
 
 	// Session id needed for parcel info request in LLUrlEntryParcel
 	// to resolve parcel name.
@@ -3111,10 +3138,11 @@ bool process_login_success_response()
 		gAgent.setHomePosRegion(region_handle, position);
 	}
 
-	// AO - Kill LL message of the day for now, There's too many unwanted shoe and jewelry adverts.
-	//      We can set it to a more informational, less commercialized feed in the future.
-	//gAgent.mMOTD.assign(response["message"]);
-	gAgent.mMOTD.assign("Welcome to Advertisement-Free Firestorm");
+	// If MOTD has not been set by fsdata, fallback to LL MOTD
+	if (gAgent.mMOTD.empty())
+	{
+		gAgent.mMOTD.assign(response["message"]);
+	}
 
 	// Options...
 	// Each 'option' is an array of submaps. 

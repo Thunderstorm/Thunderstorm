@@ -19,12 +19,10 @@ if(WINDOWS)
     set(vivox_src_dir "${CMAKE_SOURCE_DIR}/newview/vivox-runtime/i686-win32")
     set(vivox_files
         SLVoice.exe
-        libsndfile-1.dll
-        vivoxplatform.dll
         vivoxsdk.dll
         ortp.dll
-        zlib1.dll
-        vivoxoal.dll
+	alut.dll
+	wrap_oal.dll
         )
 
     #*******************************
@@ -121,64 +119,6 @@ if (MSVC80)
         set(third_party_targets ${third_party_targets} ${out_targets})
           
     endif (EXISTS ${release_msvc8_redist_path})
-elseif (MSVC10) # VisualStudio 2010
-    FIND_PATH(debug_msvc10_redist_path msvcr100d.dll
-        PATHS
-        ${MSVC_DEBUG_REDIST_PATH}
-#  (32bits)       [HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/Debug_NonRedist/x86/Microsoft.VC100.DebugCRT
-		 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/Debug_NonRedist/x86/Microsoft.VC100.DebugCRT
-        NO_DEFAULT_PATH
-        NO_DEFAULT_PATH
-        )
-
-    if(EXISTS ${debug_msvc10_redist_path})
-        set(debug_msvc10_files
-            msvcr100d.dll
-            msvcp100d.dll
-            )
-
-        copy_if_different(
-            ${debug_msvc10_redist_path}
-            "${SHARED_LIB_STAGING_DIR_DEBUG}"
-            out_targets
-            ${debug_msvc10_files}
-            )
-        set(third_party_targets ${third_party_targets} ${out_targets})
-
-    endif ()
-
-    FIND_PATH(release_msvc10_redist_path msvcr100.dll
-        PATHS
-        ${MSVC_REDIST_PATH}
-#  (32bits)     [HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/x86/Microsoft.VC100.CRT
-		 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\10.0\\Setup\\VC;ProductDir]/redist/x86/Microsoft.VC100.CRT
-        NO_DEFAULT_PATH
-        NO_DEFAULT_PATH
-        )
-
-    if(EXISTS ${release_msvc10_redist_path})
-        set(release_msvc10_files
-            msvcr100.dll
-            msvcp100.dll
-            )
-
-        copy_if_different(
-            ${release_msvc10_redist_path}
-            "${SHARED_LIB_STAGING_DIR_RELEASE}"
-            out_targets
-            ${release_msvc10_files}
-            )
-        set(third_party_targets ${third_party_targets} ${out_targets})
-
-        copy_if_different(
-            ${release_msvc10_redist_path}
-            "${SHARED_LIB_STAGING_DIR_RELWITHDEBINFO}"
-            out_targets
-            ${release_msvc10_files}
-            )
-        set(third_party_targets ${third_party_targets} ${out_targets})
-          
-    endif ()
 endif (MSVC80)
 
 elseif(DARWIN)
@@ -189,10 +129,9 @@ elseif(DARWIN)
     set(vivox_src_dir "${CMAKE_SOURCE_DIR}/newview/vivox-runtime/universal-darwin")
     set(vivox_files
         SLVoice
-        libsndfile.dylib
-        libvivoxoal.dylib
+        libalut.dylib
+        libopenal.dylib
         libortp.dylib
-        libvivoxplatform.dylib
         libvivoxsdk.dylib
        )
     # *TODO - update this to use LIBS_PREBUILT_DIR and LL_ARCH_DIR variables

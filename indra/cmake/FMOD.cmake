@@ -2,19 +2,19 @@
 
 include(Linking)
 
-#if(INSTALL_PROPRIETARY)
+if(INSTALL_PROPRIETARY)
   include(Prebuilt)
   use_prebuilt_binary(fmod)
-#endif(INSTALL_PROPRIETARY)
+endif(INSTALL_PROPRIETARY)
 
 find_library(FMOD_LIBRARY_RELEASE
-             NAMES fmod fmodvc.lib fmod-3.75 fmod.lib
+             NAMES fmod fmodvc fmod-3.75
              PATHS
              ${ARCH_PREBUILT_DIRS_RELEASE}
              )
 
 find_library(FMOD_LIBRARY_DEBUG
-             NAMES fmod fmodvc.lib fmod-3.75 fmod.lib
+             NAMES fmod fmodvc fmod-3.75
              PATHS
              ${ARCH_PREBUILT_DIRS_DEBUG}
              )

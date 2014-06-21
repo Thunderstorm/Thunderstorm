@@ -45,9 +45,6 @@
 #include "llsdutil.h"
 
 #include <algorithm>
-#if LL_MSVC
-#pragma warning( disable       : 4265 )	// "class has virtual functions, but destructor is not virtual"
-#endif
 #include <boost/regex.hpp>
 
 
@@ -885,6 +882,13 @@ std::string LLNotification::getLabel() const
 	LLStringUtil::format(label, mSubstitutions);
 	return (mTemplatep ? label : "");
 }
+
+// [SL:KB] - Patch: UI-Notifications | Checked: 2011-04-11 (Catznip-2.5.0a) | Added: Catznip-2.5.0a
+bool LLNotification::hasLabel() const
+{
+	return !mTemplatep->mLabel.empty();
+}
+// [/SL:KB]
 
 std::string LLNotification::getURL() const
 {

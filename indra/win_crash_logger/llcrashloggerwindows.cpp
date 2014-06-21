@@ -29,11 +29,15 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "llcrashloggerwindows.h"
+// [SL:KB] - Patch: Viewer-CrashLookup | Checked: 2011-03-24 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
+#include "llcrashlookupwindows.h"
+// [/SL:KB]
 
 #include <sstream>
 
 #include "boost/tokenizer.hpp"
 
+#include "dbghelp.h"
 #include "indra_constants.h"	// CRASH_BEHAVIOR_ASK, CRASH_SETTING_NAME
 #include "llerror.h"
 #include "llfile.h"
@@ -240,10 +244,18 @@ LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 
 LLCrashLoggerWindows::LLCrashLoggerWindows(void)
 {
+// [SL:KB] - Patch: Viewer-CrashLookup | Checked: 2011-03-24 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
+#ifdef LL_SEND_CRASH_REPORTS
+	mCrashLookup = new LLCrashLookupWindows();
+#endif // LL_SEND_CRASH_REPORTS
+// [/SL:KB]
 }
 
 LLCrashLoggerWindows::~LLCrashLoggerWindows(void)
 {
+// [SL:KB] - Patch: Viewer-CrashLookup | Checked: 2011-03-24 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
+	delete mCrashLookup;
+// [/SL:KB]
 }
 
 bool LLCrashLoggerWindows::init(void)
@@ -291,7 +303,10 @@ void LLCrashLoggerWindows::gatherPlatformSpecificFiles()
 	SetCursor(gCursorWait);
 	// At this point we're responsive enough the user could click the close button
 	SetCursor(gCursorArrow);
-	mDebugLog["DisplayDeviceInfo"] = gDXHardware.getDisplayInfo();
+//	mDebugLog["DisplayDeviceInfo"] = gDXHardware.getDisplayInfo();
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2010-11-14 (Catznip-2.6.0a) | Added: Catznip-2.4.0a
+	mCrashInfo["DisplayDeviceInfo"] = gDXHardware.getDisplayInfo();
+// [/SL:KB]
 }
 
 bool LLCrashLoggerWindows::mainLoop()

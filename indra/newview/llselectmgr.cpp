@@ -54,9 +54,6 @@
 #include "llviewerwindow.h"
 #include "lldrawable.h"
 #include "llfloaterinspect.h"
-// <edit>
-#include "llfloaterinspecttexture.h"
-// </edit>
 #include "llfloaterproperties.h"
 #include "llfloaterreporter.h"
 #include "llfloaterreg.h"
@@ -93,7 +90,7 @@
 #include "llvoavatarself.h"
 #include "llvovolume.h"
 #include "pipeline.h"
-// [RLVa:KB] - Checked: 2010-03-23 (RLVa-1.2.0a)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
 // [/RLVa:KB]
 
@@ -5753,13 +5750,6 @@ void dialog_refresh_all()
 	{
 		inspect_instance->dirty();
 	}
-// <edit>
-	LLFloaterInspectTexture* inspect_texture_instance = LLFloaterReg::getTypedInstance<LLFloaterInspectTexture>("inspect_texture");
-	if(inspect_texture_instance)
-	{
-		inspect_texture_instance->dirty();
-	}
-// </edit>
 
 	LLSidepanelTaskInfo *panel_task_info = LLSidepanelTaskInfo::getActivePanel();
 	if (panel_task_info)

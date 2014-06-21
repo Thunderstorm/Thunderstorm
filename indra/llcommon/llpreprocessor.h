@@ -153,16 +153,6 @@
 #pragma warning (disable : 4275) // non dll-interface class used as base for dll-interface class
 #endif	//	LL_MSVC
 
-
-
-#if defined(_MSC_VER) && _MSC_VER >= 1600
-#pragma warning (push)
-#pragma warning (disable : 4005)
-#include <intsafe.h>
-#include <stdint.h>
-#pragma warning (pop)
-#endif 
-
 #if LL_WINDOWS
 #define LL_DLLEXPORT __declspec(dllexport)
 #define LL_DLLIMPORT __declspec(dllimport)

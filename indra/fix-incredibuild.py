@@ -18,19 +18,19 @@ def main():
     build_types = ['*.exp','*.exe','*.pdb','*.idb',
                  '*.ilk','*.lib','*.obj','*.ib_pdb_index']
     pch_types = ['*.pch']
-    delete_file_types("build-vc100/newview/Release", build_types)
-    delete_file_types("build-vc100/newview/firestorm-bin.dir/Release/", 
+    delete_file_types("build-vc80/newview/Release", build_types)
+    delete_file_types("build-vc80/newview/firestorm-bin.dir/Release/", 
                       pch_types)
-    delete_file_types("build-vc100/newview/RelWithDebInfo", build_types)
-    delete_file_types("build-vc100/newview/firestorm-bin.dir/RelWithDebInfo/", 
+    delete_file_types("build-vc80/newview/RelWithDebInfo", build_types)
+    delete_file_types("build-vc80/newview/firestorm-bin.dir/RelWithDebInfo/", 
                       pch_types)
-    delete_file_types("build-vc100/newview/Debug", build_types)
-    delete_file_types("build-vc100/newview/firestorm-bin.dir/Debug/", 
+    delete_file_types("build-vc80/newview/Debug", build_types)
+    delete_file_types("build-vc80/newview/firestorm-bin.dir/Debug/", 
                       pch_types)
 
 
-    delete_file_types("build-vc100/test/RelWithDebInfo", build_types)
-    delete_file_types("build-vc100/test/test.dir/RelWithDebInfo/", 
+    delete_file_types("build-vc80/test/RelWithDebInfo", build_types)
+    delete_file_types("build-vc80/test/test.dir/RelWithDebInfo/", 
                       pch_types)
 
 

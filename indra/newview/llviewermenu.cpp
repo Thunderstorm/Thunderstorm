@@ -72,6 +72,7 @@
 #include "llinventoryfunctions.h"
 #include "llpanellogin.h"
 #include "llpanelblockedlist.h"
+#include "piemenu.h"		// ## Zi: Pie Menu
 #include "llmenucommands.h"
 #include "llmoveview.h"
 #include "llparcel.h"
@@ -105,10 +106,13 @@
 #include "lltrans.h"
 #include "lleconomy.h"
 #include "boost/unordered_map.hpp"
-
-// [RLVa:KB] - Checked: 2010-03-09 (RLVa-1.2.0a)
+// [RLVa:KB] - Checked: 2011-05-22 (RLVa-1.3.1a)
 #include "rlvhandler.h"
+#include "rlvlocks.h"
 // [/RLVa:KB]
+//-TT Client LSL Bridge
+#include "fslslbridge.h"
+//-TT
 
 using namespace LLVOAvatarDefines;
 
@@ -143,13 +147,23 @@ LLMenuGL		*gPopupMenuView = NULL;
 LLMenuGL		*gEditMenu = NULL;
 LLMenuBarGL		*gLoginMenuBarView = NULL;
 
-// Pie menus
+// Context menus
 LLContextMenu	*gMenuAvatarSelf	= NULL;
 LLContextMenu	*gMenuAvatarOther = NULL;
 LLContextMenu	*gMenuObject = NULL;
 LLContextMenu	*gMenuAttachmentSelf = NULL;
 LLContextMenu	*gMenuAttachmentOther = NULL;
 LLContextMenu	*gMenuLand	= NULL;
+
+// ## Zi: Pie menu
+// Pie menus
+PieMenu		*gPieMenuAvatarSelf	= NULL;
+PieMenu		*gPieMenuAvatarOther = NULL;
+PieMenu		*gPieMenuObject = NULL;
+PieMenu		*gPieMenuAttachmentSelf = NULL;
+PieMenu		*gPieMenuAttachmentOther = NULL;
+PieMenu		*gPieMenuLand	= NULL;
+// ## Zi: Pie menu
 
 const std::string SAVE_INTO_INVENTORY("Save Object Back to My Inventory");
 const std::string SAVE_INTO_TASK_INVENTORY("Save Object Back to Object Contents");
@@ -163,6 +177,15 @@ LLContextMenu* gAttachBodyPartPieMenus[8];
 LLContextMenu* gDetachPieMenu = NULL;
 LLContextMenu* gDetachScreenPieMenu = NULL;
 LLContextMenu* gDetachBodyPartPieMenus[8];
+
+// ## Zi: Pie menu
+PieMenu* gPieAttachScreenMenu = NULL;
+PieMenu* gPieAttachMenu = NULL;
+PieMenu* gPieAttachBodyPartMenus[8];
+PieMenu* gPieDetachMenu = NULL;
+PieMenu* gPieDetachScreenMenu = NULL;
+PieMenu* gPieDetachBodyPartMenus[8];
+// ## Zi: Pie menu
 
 LLMenuItemCallGL* gAFKMenu = NULL;
 LLMenuItemCallGL* gBusyMenu = NULL;
@@ -418,6 +441,32 @@ void init_menus()
 
 	gMenuLand = LLUICtrlFactory::createFromFile<LLContextMenu>(
 		"menu_land.xml", gMenuHolder, registry);
+
+// ## Zi: Pie menu
+	gPieMenuAvatarSelf = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_avatar_self.xml", gMenuHolder, registry);
+	gPieMenuAvatarOther = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_avatar_other.xml", gMenuHolder, registry);
+
+	// added "Pie" to the control names to keep them unique
+	gPieDetachScreenMenu = gMenuHolder->getChild<PieMenu>("Pie Object Detach HUD", true);
+	gPieDetachMenu = gMenuHolder->getChild<PieMenu>("Pie Object Detach", true);
+
+	gPieMenuObject = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_object.xml", gMenuHolder, registry);
+
+	// added "Pie" to the control names to keep them unique
+	gPieAttachScreenMenu = gMenuHolder->getChild<PieMenu>("Pie Object Attach HUD");
+	gPieAttachMenu = gMenuHolder->getChild<PieMenu>("Pie Object Attach");
+
+	gPieMenuAttachmentSelf = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_attachment_self.xml", gMenuHolder, registry);
+	gPieMenuAttachmentOther = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_attachment_other.xml", gMenuHolder, registry);
+
+	gPieMenuLand = LLUICtrlFactory::createFromFile<PieMenu>(
+		"menu_pie_land.xml", gMenuHolder, registry);
+// ## Zi: Pie menu
 
 	///
 	/// set up the colors
@@ -1923,7 +1972,19 @@ class LLAdvancedDumpAvatarLocalTextures : public view_listener_t
 };
 
 #endif
-	
+
+///////////////////////////////////
+// Reload Avatar Cloud Particles //
+///////////////////////////////////
+class LLAdvancedReloadAvatarCloudParticle : public view_listener_t
+{
+	bool handleEvent(const LLSD& userdata)
+	{
+		LLVOAvatar::initCloud();
+		return true;
+	}
+};
+
 /////////////////
 // MESSAGE LOG //
 /////////////////
@@ -2433,180 +2494,6 @@ void cleanup_menus()
 //-----------------------------------------------------------------------------
 // Object pie menu
 //-----------------------------------------------------------------------------
-//<edit> FCTeam Reverse Particle
-class LLObjectParticle : public view_listener_t
-{
-    bool handleEvent(const LLSD& userdata)
-    {
-		for (LLObjectSelection::valid_iterator iter = LLSelectMgr::getInstance()->getSelection()->valid_begin();
-			 iter != LLSelectMgr::getInstance()->getSelection()->valid_end(); iter++)
-		{
-			LLSelectNode* node = *iter;
-			if(node->getObject()->isParticleSource())
-			{
-				LLPartSysData thisPartSysData = node->getObject()->mPartSourcep->mPartSysData;
-
-				std::ostringstream script_stream;
-				std::string flags_st="( 0 ";
-				std::string pattern_st="";
-
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_INTERP_COLOR_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_INTERP_COLOR_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_INTERP_SCALE_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_INTERP_SCALE_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_BOUNCE_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_BOUNCE_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_WIND_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_WIND_MASK\n");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_FOLLOW_SRC_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_FOLLOW_SRC_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_FOLLOW_VELOCITY_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_FOLLOW_VELOCITY_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_TARGET_POS_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_TARGET_POS_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_TARGET_LINEAR_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_TARGET_LINEAR_MASK");
-				if (thisPartSysData.mPartData.mFlags & LLPartData::LL_PART_EMISSIVE_MASK)
-					flags_st.append("\n\t\t\t\t|PSYS_PART_EMISSIVE_MASK");
-
-				switch (thisPartSysData.mPattern)
-				{
-					case 0x01:	pattern_st=" PSYS_SRC_PATTERN_DROP ";		break;
-					case 0x02:	pattern_st=" PSYS_SRC_PATTERN_EXPLODE ";	break;
-					case 0x04:	pattern_st=" PSYS_SRC_PATTERN_ANGLE ";		break;
-					case 0x08:	pattern_st=" PSYS_SRC_PATTERN_ANGLE_CONE ";	break;
-					case 0x10:	pattern_st=" PSYS_SRC_PATTERN_ANGLE_CONE_EMPTY ";	break;
-					default:	pattern_st="0";								break;
-				}
-
-				script_stream << "// *****  Reverse Particle V 1.00 FCTeam  *****\n";
-				script_stream << "default\n";
-				script_stream << "{\n";
-				script_stream << "\tstate_entry()\n";
-				script_stream << "\t{\n";
-				script_stream << "\t\tllParticleSystem([\n";
-				script_stream << "\t\t\tPSYS_PART_FLAGS," << flags_st << " ), \n";
-				script_stream << "\t\t\tPSYS_SRC_PATTERN," << pattern_st  << ",\n";
-				script_stream << "\t\t\tPSYS_PART_START_ALPHA," << thisPartSysData.mPartData.mStartColor.mV[3] << ",\n";
-				script_stream << "\t\t\tPSYS_PART_END_ALPHA," << thisPartSysData.mPartData.mEndColor.mV[3] << ",\n";
-				script_stream << "\t\t\tPSYS_PART_START_COLOR,<"<<thisPartSysData.mPartData.mStartColor.mV[0] << ",";
-				script_stream << thisPartSysData.mPartData.mStartColor.mV[1] << ",";
-				script_stream << thisPartSysData.mPartData.mStartColor.mV[2] << "> ,\n";
-				script_stream << "\t\t\tPSYS_PART_END_COLOR,<"<<thisPartSysData.mPartData.mEndColor.mV[0] << ",";
-				script_stream << thisPartSysData.mPartData.mEndColor.mV[1] << ",";
-				script_stream << thisPartSysData.mPartData.mEndColor.mV[2] << "> ,\n";
-				script_stream << "\t\t\tPSYS_PART_START_SCALE,<" << thisPartSysData.mPartData.mStartScale.mV[0] << ",";
-				script_stream << thisPartSysData.mPartData.mStartScale.mV[1] << ",0>,\n";
-				script_stream << "\t\t\tPSYS_PART_END_SCALE,<" << thisPartSysData.mPartData.mEndScale.mV[0] << ",";
-				script_stream << thisPartSysData.mPartData.mEndScale.mV[1] << ",0>,\n";
-				script_stream << "\t\t\tPSYS_PART_MAX_AGE," << thisPartSysData.mPartData.mMaxAge << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_MAX_AGE," <<  thisPartSysData.mMaxAge << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_ACCEL,<"<<  thisPartSysData.mPartAccel.mV[0] << ",";
-				script_stream << thisPartSysData.mPartAccel.mV[1] << ",";
-				script_stream << thisPartSysData.mPartAccel.mV[2] << ">,\n";
-				script_stream << "\t\t\tPSYS_SRC_BURST_PART_COUNT," << (U32) thisPartSysData.mBurstPartCount << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_BURST_RADIUS," << thisPartSysData.mBurstRadius << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_BURST_RATE," << thisPartSysData.mBurstRate << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_BURST_SPEED_MIN," << thisPartSysData.mBurstSpeedMin << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_BURST_SPEED_MAX," << thisPartSysData.mBurstSpeedMax << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_ANGLE_BEGIN," << thisPartSysData.mInnerAngle << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_ANGLE_END," << thisPartSysData.mOuterAngle << ",\n";
-				script_stream << "\t\t\tPSYS_SRC_OMEGA,<" << thisPartSysData.mAngularVelocity.mV[0]<< ",";
-				script_stream << thisPartSysData.mAngularVelocity.mV[1] << ",";
-				script_stream << thisPartSysData.mAngularVelocity.mV[2] << ">,\n";
-				script_stream << "\t\t\tPSYS_SRC_TEXTURE, (key)\"" << node->getObject()->mPartSourcep->getImage()->getID()<< "\",\n";
-				script_stream << "\t\t\tPSYS_SRC_TARGET_KEY, (key)\"" << thisPartSysData.mTargetUUID << "\"\n";
-				script_stream << " \t\t]);\n";
-				script_stream << "\t}\n";
-				script_stream << "}\n";
-				LLSD args;
-				args["MESSAGE"] = "\nReverse engineering Script has been copied to your clipboard, paste it in a new script\n";
-				LLNotificationsUtil::add("SystemMessage", args);
-
-				gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(script_stream.str()));
-			}
-		}
-		return true;
-	}
-};
-//simms Object UUID
-class LLObjectKey : public view_listener_t
-{
-    bool handleEvent(const LLSD& userdata)
-    {
-        LLViewerObject* simms = LLSelectMgr::getInstance()->getSelection()->getFirstObject();
-        if(!simms)return true;
-        LLUUID id = simms->getID();
-		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
-		id.toString(buffer);
-		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
-		cmdline_printchat("Object UUID: "+id.asString());
-        return true;
-    }
-}; 
-//simms Avatar UUID
-class LLAvatarKey : public view_listener_t
-{
-	bool handleEvent(const LLSD& userdata)
-    {
-		LLVOAvatar* simms = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
-		if(!simms) return true;
-		
-		LLUUID uuid = simms->getID();
-		char buffer[UUID_STR_LENGTH]; /*Flawfinder: ignore*/
-		uuid.toString(buffer);
-		gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
-		cmdline_printchat("Avatar UUID: "+uuid.asString());
-        return true;
-    }
-};
-
-class LLObjectSaveAs : public view_listener_t
-{
-    bool handleEvent(const LLSD& userdata)
-	{
-//TO FIX		LLFloaterExport* floater = new LLFloaterExport();
-//TO FIX		floater->center();
-		return true;
-	}
-};
-
-class LLObjectImport : public view_listener_t
-{
-    bool handleEvent(const LLSD& userdata)
-	{
-		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
-		bool new_value = (object != NULL);
-		if(object)
-		{
-			if(!object->permCopy())
-				new_value = false;
-			else if(!object->permModify())
-				new_value = false;
-			else if(!object->permMove())
-				new_value = false;
-			else if(object->numChildren() != 0)
-				new_value = false;
-			else if(object->getParent())
-				new_value = false;
-		}
-		if(new_value == false) return true;
-		
-		LLFilePicker& picker = LLFilePicker::instance();
-		if (!picker.getOpenFile(LLFilePicker::FFLOAD_XML))
-		{
-			return true;
-		}
-		std::string file_name = picker.getFirstFile();
-//TO FIX		LLXmlImportOptions* options = new LLXmlImportOptions(file_name);
-//TO FIX		options->mSupplier = object;
-//TO FIX		new LLFloaterXmlImportOptions(options);
-		return true;
-	}
-};
-// </edit>
-
-
 
 // Andromeda Rage:  Derender functionality, inspired by Phoenix.  TODO: RLVa stuff
 class LLObjectDerender : public view_listener_t
@@ -3251,79 +3138,90 @@ class LLAvatarReportAbuse : public view_listener_t
 //---------------------------------------------------------------------------
 // Parcel freeze, eject, etc.
 //---------------------------------------------------------------------------
-bool callback_freeze(const LLSD& notification, const LLSD& response)
-{
-	LLUUID avatar_id = notification["payload"]["avatar_id"].asUUID();
-	S32 option = LLNotificationsUtil::getSelectedOption(notification, response);
-
-	if (0 == option || 1 == option)
-	{
-		U32 flags = 0x0;
-		if (1 == option)
-		{
-			// unfreeze
-			flags |= 0x1;
-		}
-
-		LLMessageSystem* msg = gMessageSystem;
-		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
-
-		if (avatar)
-		{
-			msg->newMessage("FreezeUser");
-			msg->nextBlock("AgentData");
-			msg->addUUID("AgentID", gAgent.getID());
-			msg->addUUID("SessionID", gAgent.getSessionID());
-			msg->nextBlock("Data");
-			msg->addUUID("TargetID", avatar_id );
-			msg->addU32("Flags", flags );
-			msg->sendReliable( avatar->getRegion()->getHost() );
-		}
-	}
-	return false;
-}
+//bool callback_freeze(const LLSD& notification, const LLSD& response)
+//{
+//	LLUUID avatar_id = notification["payload"]["avatar_id"].asUUID();
+//	S32 option = LLNotificationsUtil::getSelectedOption(notification, response);
+//
+//	if (0 == option || 1 == option)
+//	{
+//		U32 flags = 0x0;
+//		if (1 == option)
+//		{
+//			// unfreeze
+//			flags |= 0x1;
+//		}
+//
+//		LLMessageSystem* msg = gMessageSystem;
+//		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
+//
+//		if (avatar)
+//		{
+//			msg->newMessage("FreezeUser");
+//			msg->nextBlock("AgentData");
+//			msg->addUUID("AgentID", gAgent.getID());
+//			msg->addUUID("SessionID", gAgent.getSessionID());
+//			msg->nextBlock("Data");
+//			msg->addUUID("TargetID", avatar_id );
+//			msg->addU32("Flags", flags );
+//			msg->sendReliable( avatar->getRegion()->getHost() );
+//		}
+//	}
+//	return false;
+//}
 
 
 void handle_avatar_freeze(const LLSD& avatar_id)
 {
-		// Use avatar_id if available, otherwise default to right-click avatar
-		LLVOAvatar* avatar = NULL;
-		if (avatar_id.asUUID().notNull())
-		{
-			avatar = find_avatar_from_object(avatar_id.asUUID());
-		}
-		else
-		{
-			avatar = find_avatar_from_object(
-				LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
-		}
-
-		if( avatar )
-		{
-			std::string fullname = avatar->getFullname();
-			LLSD payload;
-			payload["avatar_id"] = avatar->getID();
-
-			if (!fullname.empty())
-			{
-				LLSD args;
+// [SL:KB] - Patch: UI-AvatarNearbyActions | Checked: 2011-05-13 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
+	// Use avatar_id if available, otherwise default to right-click avatar
+	LLUUID idAgent = avatar_id.asUUID();
+	if (idAgent.isNull())
+	{
+		/*const*/ LLVOAvatar* pAvatar = find_avatar_from_object(LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+		if (pAvatar)
+			idAgent = pAvatar->getID();
+	}
+	if (idAgent.notNull())
+	{
+		LLAvatarActions::landFreeze(idAgent);
+	}
+// [/SL:KB]
+//		// Use avatar_id if available, otherwise default to right-click avatar
+//		LLVOAvatar* avatar = NULL;
+//		if (avatar_id.asUUID().notNull())
+//		{
+//			avatar = find_avatar_from_object(avatar_id.asUUID());
+//		}
+//		else
+//		{
+//			avatar = find_avatar_from_object(
+//				LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+//		}
+//
+//		if( avatar )
+//		{
+//			std::string fullname = avatar->getFullname();
+//			LLSD payload;
+//			payload["avatar_id"] = avatar->getID();
+//
+//			if (!fullname.empty())
+//			{
+//				LLSD args;
 //				args["AVATAR_NAME"] = fullname;
-// [RLVa:KB] - Checked: 2010-09-28 (RLVa-1.2.1f) | Modified: RLVa-1.0.0e
-				args["AVATAR_NAME"] = (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? fullname : RlvStrings::getAnonym(fullname);
-// [/RLVa:KB]
-				LLNotificationsUtil::add("FreezeAvatarFullname",
-							args,
-							payload,
-							callback_freeze);
-			}
-			else
-			{
-				LLNotificationsUtil::add("FreezeAvatar",
-							LLSD(),
-							payload,
-							callback_freeze);
-			}
-		}
+//				LLNotificationsUtil::add("FreezeAvatarFullname",
+//							args,
+//							payload,
+//							callback_freeze);
+//			}
+//			else
+//			{
+//				LLNotificationsUtil::add("FreezeAvatar",
+//							LLSD(),
+//							payload,
+//							callback_freeze);
+//			}
+//		}
 }
 
 class LLAvatarVisibleDebug : public view_listener_t
@@ -3341,9 +3239,6 @@ class LLAvatarDebug : public view_listener_t
 		LLVOAvatar* avatar = find_avatar_from_object( LLSelectMgr::getInstance()->getSelection()->getPrimaryObject() );
 		if( avatar )
 		{
-// <edit>
-				((LLVOAvatarSelf *)avatar)->dumpLocalTextures();
-/*
 			if (avatar->isSelf())
 			{
 				((LLVOAvatarSelf *)avatar)->dumpLocalTextures();
@@ -3353,172 +3248,189 @@ class LLAvatarDebug : public view_listener_t
 			strings.push_back(avatar->getID().asString());
 			LLUUID invoice;
 			send_generic_message("dumptempassetdata", strings, invoice);
-*/
-// </edit>
 			LLFloaterReg::showInstance( "avatar_textures", LLSD(avatar->getID()) );
 		}
 		return true;
 	}
 };
 
-bool callback_eject(const LLSD& notification, const LLSD& response)
-{
-	S32 option = LLNotificationsUtil::getSelectedOption(notification, response);
-	if (2 == option)
-	{
-		// Cancel button.
-		return false;
-	}
-	LLUUID avatar_id = notification["payload"]["avatar_id"].asUUID();
-	bool ban_enabled = notification["payload"]["ban_enabled"].asBoolean();
-
-	if (0 == option)
-	{
-		// Eject button
-		LLMessageSystem* msg = gMessageSystem;
-		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
-
-		if (avatar)
-		{
-			U32 flags = 0x0;
-			msg->newMessage("EjectUser");
-			msg->nextBlock("AgentData");
-			msg->addUUID("AgentID", gAgent.getID() );
-			msg->addUUID("SessionID", gAgent.getSessionID() );
-			msg->nextBlock("Data");
-			msg->addUUID("TargetID", avatar_id );
-			msg->addU32("Flags", flags );
-			msg->sendReliable( avatar->getRegion()->getHost() );
-		}
-	}
-	else if (ban_enabled)
-	{
-		// This is tricky. It is similar to say if it is not an 'Eject' button,
-		// and it is also not an 'Cancle' button, and ban_enabled==ture, 
-		// it should be the 'Eject and Ban' button.
-		LLMessageSystem* msg = gMessageSystem;
-		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
-
-		if (avatar)
-		{
-			U32 flags = 0x1;
-			msg->newMessage("EjectUser");
-			msg->nextBlock("AgentData");
-			msg->addUUID("AgentID", gAgent.getID() );
-			msg->addUUID("SessionID", gAgent.getSessionID() );
-			msg->nextBlock("Data");
-			msg->addUUID("TargetID", avatar_id );
-			msg->addU32("Flags", flags );
-			msg->sendReliable( avatar->getRegion()->getHost() );
-		}
-	}
-	return false;
-}
+//bool callback_eject(const LLSD& notification, const LLSD& response)
+//{
+//	S32 option = LLNotificationsUtil::getSelectedOption(notification, response);
+//	if (2 == option)
+//	{
+//		// Cancel button.
+//		return false;
+//	}
+//	LLUUID avatar_id = notification["payload"]["avatar_id"].asUUID();
+//	bool ban_enabled = notification["payload"]["ban_enabled"].asBoolean();
+//
+//	if (0 == option)
+//	{
+//		// Eject button
+//		LLMessageSystem* msg = gMessageSystem;
+//		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
+//
+//		if (avatar)
+//		{
+//			U32 flags = 0x0;
+//			msg->newMessage("EjectUser");
+//			msg->nextBlock("AgentData");
+//			msg->addUUID("AgentID", gAgent.getID() );
+//			msg->addUUID("SessionID", gAgent.getSessionID() );
+//			msg->nextBlock("Data");
+//			msg->addUUID("TargetID", avatar_id );
+//			msg->addU32("Flags", flags );
+//			msg->sendReliable( avatar->getRegion()->getHost() );
+//		}
+//	}
+//	else if (ban_enabled)
+//	{
+//		// This is tricky. It is similar to say if it is not an 'Eject' button,
+//		// and it is also not an 'Cancle' button, and ban_enabled==ture, 
+//		// it should be the 'Eject and Ban' button.
+//		LLMessageSystem* msg = gMessageSystem;
+//		LLViewerObject* avatar = gObjectList.findObject(avatar_id);
+//
+//		if (avatar)
+//		{
+//			U32 flags = 0x1;
+//			msg->newMessage("EjectUser");
+//			msg->nextBlock("AgentData");
+//			msg->addUUID("AgentID", gAgent.getID() );
+//			msg->addUUID("SessionID", gAgent.getSessionID() );
+//			msg->nextBlock("Data");
+//			msg->addUUID("TargetID", avatar_id );
+//			msg->addU32("Flags", flags );
+//			msg->sendReliable( avatar->getRegion()->getHost() );
+//		}
+//	}
+//	return false;
+//}
 
 void handle_avatar_eject(const LLSD& avatar_id)
 {
-		// Use avatar_id if available, otherwise default to right-click avatar
-		LLVOAvatar* avatar = NULL;
-		if (avatar_id.asUUID().notNull())
-		{
-			avatar = find_avatar_from_object(avatar_id.asUUID());
-		}
-		else
-		{
-			avatar = find_avatar_from_object(
-				LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
-		}
-
-		if( avatar )
-		{
-			LLSD payload;
-			payload["avatar_id"] = avatar->getID();
-			std::string fullname = avatar->getFullname();
-
-			const LLVector3d& pos = avatar->getPositionGlobal();
-			LLParcel* parcel = LLViewerParcelMgr::getInstance()->selectParcelAt(pos)->getParcel();
-			
-			if (LLViewerParcelMgr::getInstance()->isParcelOwnedByAgent(parcel,GP_LAND_MANAGE_BANNED))
-			{
-                payload["ban_enabled"] = true;
-				if (!fullname.empty())
-				{
-    				LLSD args;
-//					args["AVATAR_NAME"] = fullname;
-// [RLVa:KB] - Checked: 2010-09-28 (RLVa-1.2.1f) | Modified: RLVa-1.0.0e
-					args["AVATAR_NAME"] = (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? fullname : RlvStrings::getAnonym(fullname);
-// [/RLVa:KB]
-    				LLNotificationsUtil::add("EjectAvatarFullname",
-    							args,
-    							payload,
-    							callback_eject);
-				}
-				else
-				{
-    				LLNotificationsUtil::add("EjectAvatarFullname",
-    							LLSD(),
-    							payload,
-    							callback_eject);
-				}
-			}
-			else
-			{
-                payload["ban_enabled"] = false;
-				if (!fullname.empty())
-				{
-    				LLSD args;
-//					args["AVATAR_NAME"] = fullname;
-// [RLVa:KB] - Checked: 2010-09-28 (RLVa-1.2.1f) | Modified: RLVa-1.0.0e
-					args["AVATAR_NAME"] = (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES)) ? fullname : RlvStrings::getAnonym(fullname);
-// [/RLVa:KB]
-    				LLNotificationsUtil::add("EjectAvatarFullnameNoBan",
-    							args,
-    							payload,
-    							callback_eject);
-				}
-				else
-				{
-    				LLNotificationsUtil::add("EjectAvatarNoBan",
-    							LLSD(),
-    							payload,
-    							callback_eject);
-				}
-			}
-		}
+// [SL:KB] - Patch: UI-AvatarNearbyActions | Checked: 2011-05-13 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
+	// Use avatar_id if available, otherwise default to right-click avatar
+	LLUUID idAgent = avatar_id.asUUID();
+	if (idAgent.isNull())
+	{
+		/*const*/ LLVOAvatar* pAvatar = find_avatar_from_object(LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+		if (pAvatar)
+			idAgent = pAvatar->getID();
+	}
+	if (idAgent.notNull())
+	{
+		LLAvatarActions::landEject(idAgent);
+	}
+// [/SL:KB]
+//		// Use avatar_id if available, otherwise default to right-click avatar
+//		LLVOAvatar* avatar = NULL;
+//		if (avatar_id.asUUID().notNull())
+//		{
+//			avatar = find_avatar_from_object(avatar_id.asUUID());
+//		}
+//		else
+//		{
+//			avatar = find_avatar_from_object(
+//				LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+//		}
+//
+//		if( avatar )
+//		{
+//			LLSD payload;
+//			payload["avatar_id"] = avatar->getID();
+//			std::string fullname = avatar->getFullname();
+//
+//			const LLVector3d& pos = avatar->getPositionGlobal();
+//			LLParcel* parcel = LLViewerParcelMgr::getInstance()->selectParcelAt(pos)->getParcel();
+//			
+//			if (LLViewerParcelMgr::getInstance()->isParcelOwnedByAgent(parcel,GP_LAND_MANAGE_BANNED))
+//			{
+//                payload["ban_enabled"] = true;
+//				if (!fullname.empty())
+//				{
+//    				LLSD args;
+//    				args["AVATAR_NAME"] = fullname;
+//    				LLNotificationsUtil::add("EjectAvatarFullname",
+//    							args,
+//    							payload,
+//    							callback_eject);
+//				}
+//				else
+//				{
+//    				LLNotificationsUtil::add("EjectAvatarFullname",
+//    							LLSD(),
+//    							payload,
+//    							callback_eject);
+//				}
+//			}
+//			else
+//			{
+//                payload["ban_enabled"] = false;
+//				if (!fullname.empty())
+//				{
+//    				LLSD args;
+//    				args["AVATAR_NAME"] = fullname;
+//    				LLNotificationsUtil::add("EjectAvatarFullnameNoBan",
+//    							args,
+//    							payload,
+//    							callback_eject);
+//				}
+//				else
+//				{
+//    				LLNotificationsUtil::add("EjectAvatarNoBan",
+//    							LLSD(),
+//    							payload,
+//    							callback_eject);
+//				}
+//			}
+//		}
 }
 
 bool enable_freeze_eject(const LLSD& avatar_id)
 {
+// [SL:KB] - Patch: UI-AvatarNearbyActions | Checked: 2011-05-13 (Catznip-2.6.0a) | Added: Catznip-2.6.0a
 	// Use avatar_id if available, otherwise default to right-click avatar
-	LLVOAvatar* avatar = NULL;
-	if (avatar_id.asUUID().notNull())
+	LLUUID idAgent = avatar_id.asUUID();
+	if (idAgent.isNull())
 	{
-		avatar = find_avatar_from_object(avatar_id.asUUID());
+		/*const*/ LLVOAvatar* pAvatar = find_avatar_from_object(LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+		if (pAvatar)
+			idAgent = pAvatar->getID();
 	}
-	else
-	{
-		avatar = find_avatar_from_object(
-			LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
-	}
-	if (!avatar) return false;
-
-	// Gods can always freeze
-	if (gAgent.isGodlike()) return true;
-
-	// Estate owners / managers can freeze
-	// Parcel owners can also freeze
-	const LLVector3& pos = avatar->getPositionRegion();
-	const LLVector3d& pos_global = avatar->getPositionGlobal();
-	LLParcel* parcel = LLViewerParcelMgr::getInstance()->selectParcelAt(pos_global)->getParcel();
-	LLViewerRegion* region = avatar->getRegion();
-	if (!region) return false;
-				
-	bool new_value = region->isOwnedSelf(pos);
-	if (!new_value || region->isOwnedGroup(pos))
-	{
-		new_value = LLViewerParcelMgr::getInstance()->isParcelOwnedByAgent(parcel,GP_LAND_ADMIN);
-	}
-	return new_value;
+	return (idAgent.notNull()) ? LLAvatarActions::canLandFreezeOrEject(idAgent) : false;
+// [/SL:KB]
+//	// Use avatar_id if available, otherwise default to right-click avatar
+//	LLVOAvatar* avatar = NULL;
+//	if (avatar_id.asUUID().notNull())
+//	{
+//		avatar = find_avatar_from_object(avatar_id.asUUID());
+//	}
+//	else
+//	{
+//		avatar = find_avatar_from_object(
+//			LLSelectMgr::getInstance()->getSelection()->getPrimaryObject());
+//	}
+//	if (!avatar) return false;
+//
+//	// Gods can always freeze
+//	if (gAgent.isGodlike()) return true;
+//
+//	// Estate owners / managers can freeze
+//	// Parcel owners can also freeze
+//	const LLVector3& pos = avatar->getPositionRegion();
+//	const LLVector3d& pos_global = avatar->getPositionGlobal();
+//	LLParcel* parcel = LLViewerParcelMgr::getInstance()->selectParcelAt(pos_global)->getParcel();
+//	LLViewerRegion* region = avatar->getRegion();
+//	if (!region) return false;
+//				
+//	bool new_value = region->isOwnedSelf(pos);
+//	if (!new_value || region->isOwnedGroup(pos))
+//	{
+//		new_value = LLViewerParcelMgr::getInstance()->isParcelOwnedByAgent(parcel,GP_LAND_ADMIN);
+//	}
+//	return new_value;
 }
 
 
@@ -4352,7 +4264,7 @@ void handle_object_owner_permissive(void*)
 void handle_object_owner_self(void*)
 {
 	// only send this if they're a god.
-	// gAgent.isGodlike();
+	if(gAgent.isGodlike())
 	{
 		LLSelectMgr::getInstance()->sendOwner(gAgent.getID(), gAgent.getGroupID(), TRUE);
 	}
@@ -4367,7 +4279,7 @@ void handle_object_lock(void*)
 void handle_object_asset_ids(void*)
 {
 	// only send this if they're a god.
-	gAgent.isGodlike();
+	if (gAgent.isGodlike())
 	{
 		LLSelectMgr::getInstance()->sendGodlikeRequest("objectinfo", "assetids");
 	}
@@ -5675,16 +5587,16 @@ class LLWorldAlwaysRun : public view_listener_t
 		if (gAgent.getAlwaysRun())
 		{
 			gAgent.clearAlwaysRun();
-			gAgent.clearRunning();
+//			gAgent.clearRunning();
 		}
 		else
 		{
 			gAgent.setAlwaysRun();
-			gAgent.setRunning();
+//			gAgent.setRunning();
 		}
 
 		// tell the simulator.
-		gAgent.sendWalkRun(gAgent.getAlwaysRun());
+//		gAgent.sendWalkRun(gAgent.getAlwaysRun());
 
 		// Update Movement Controls according to AlwaysRun mode
 		LLFloaterMove::setAlwaysRunMode(gAgent.getAlwaysRun());
@@ -6067,6 +5979,11 @@ void handle_report_abuse()
 void handle_buy_currency()
 {
 	LLBuyCurrencyHTML::openCurrencyFloater();
+}
+
+void handle_recreate_lsl_bridge()
+{
+	FSLSLBridge::instance().recreateBridge();
 }
 
 class LLFloaterVisible : public view_listener_t
@@ -8561,7 +8478,9 @@ void initialize_menus()
 	commit.add("EditOutfit", boost::bind(&handle_edit_outfit));
 	commit.add("EditShape", boost::bind(&handle_edit_shape));
 	commit.add("EditPhysics", boost::bind(&handle_edit_physics));
-
+//-TT Client LSL Bridge
+	commit.add("RecreateLSLBridge", boost::bind(&handle_recreate_lsl_bridge));
+//-TT
 	// View menu
 	view_listener_t::addMenu(new LLViewMouselook(), "View.Mouselook");
 	view_listener_t::addMenu(new LLViewJoystickFlycam(), "View.JoystickFlycam");
@@ -8773,6 +8692,8 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLAdvancedRebakeTextures(), "Advanced.RebakeTextures");
 	view_listener_t::addMenu(new LLAdvancedDebugAvatarTextures(), "Advanced.DebugAvatarTextures");
 	view_listener_t::addMenu(new LLAdvancedDumpAvatarLocalTextures(), "Advanced.DumpAvatarLocalTextures");
+	view_listener_t::addMenu(new LLAdvancedReloadAvatarCloudParticle(), "Advanced.ReloadAvatarCloudParticle");
+
 	// Advanced > Network
 	view_listener_t::addMenu(new LLAdvancedEnableMessageLog(), "Advanced.EnableMessageLog");
 	view_listener_t::addMenu(new LLAdvancedDisableMessageLog(), "Advanced.DisableMessageLog");
@@ -8847,9 +8768,6 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLAvatarDebug(), "Avatar.Debug");
 	view_listener_t::addMenu(new LLAvatarVisibleDebug(), "Avatar.VisibleDebug");
 	view_listener_t::addMenu(new LLAvatarInviteToGroup(), "Avatar.InviteToGroup");
-	// <edit>
-	view_listener_t::addMenu(new LLAvatarKey(), "Avatar.Key");
-	// </edit>
 	commit.add("Avatar.Eject", boost::bind(&handle_avatar_eject, LLSD()));
 	commit.add("Avatar.ShowInspector", boost::bind(&handle_avatar_show_inspector));
 	view_listener_t::addMenu(new LLAvatarSendIM(), "Avatar.SendIM");
@@ -8874,15 +8792,10 @@ void initialize_menus()
 	view_listener_t::addMenu(new LLObjectReportAbuse(), "Object.ReportAbuse");
 	view_listener_t::addMenu(new LLObjectMute(), "Object.Mute");
     view_listener_t::addMenu(new LLObjectDerender(), "Object.Derender");
-// <edit>
-    view_listener_t::addMenu(new LLObjectTexture(), "Object.Texture");
-    view_listener_t::addMenu(new LLObjectKey(), "Object.Key");
-    view_listener_t::addMenu(new LLObjectParticle(), "Object.Particle");
-	view_listener_t::addMenu(new LLObjectSaveAs(), "Object.SaveAs");
-	view_listener_t::addMenu(new LLObjectImport(), "Object.Import");
-// </edit>    
+    
 	enable.add("Object.VisibleTake", boost::bind(&visible_take_object));
 	enable.add("Object.VisibleBuy", boost::bind(&visible_buy_object));
+
 	commit.add("Object.Buy", boost::bind(&handle_buy));
 	commit.add("Object.Edit", boost::bind(&handle_object_edit));
 	commit.add("Object.Inspect", boost::bind(&handle_object_inspect));

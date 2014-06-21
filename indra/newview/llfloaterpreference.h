@@ -93,6 +93,11 @@ protected:
 	void		onLanguageChange();
 	void		onNameTagOpacityChange(const LLSD& newvalue);
 
+	// ## Zi: Pie menu
+	// make sure controls get greyed out or enwbled when pie color override is toggled
+	void onPieColorsOverrideChanged();
+	// ## Zi: Pie menu
+
 	// set value of "BusyResponseChanged" in account settings depending on whether busy response
 	// string differs from default after user changes.
 	void onBusyResponseChanged();
@@ -134,6 +139,7 @@ public:
 	void onClickSetKey();
 	void setKey(KEY key);
 	void onClickSetMiddleMouse();
+	void onClickSetSounds();
 //	void onClickSkipDialogs();
 //	void onClickResetDialogs();
 	void onClickEnablePopup();
@@ -258,6 +264,20 @@ protected:
 	LLComboBox* m_pSkinThemeCombo;
 	LLSD        m_SkinsInfo;
 };
+// [/SL:KB]
 
+// [SL:KB] - Patch: Viewer-CrashReporting | Checked: 2010-10-21 (Catznip-2.6.0a) | Added: Catznip-2.2.0c
+class LLPanelPreferenceCrashReports : public LLPanelPreference
+{
+public:
+	LLPanelPreferenceCrashReports();
+
+	/*virtual*/ BOOL postBuild();
+	/*virtual*/ void apply();
+	/*virtual*/ void cancel();
+
+	void refresh();
+};
+// [/SL:KB]
 
 #endif  // LL_LLPREFERENCEFLOATER_H

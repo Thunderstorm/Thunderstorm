@@ -771,6 +771,18 @@ void LLPanelPeople::onChange(EStatusType status, const std::string &channelURI, 
 	updateButtons();
 }
 
+
+void LLPanelPeople::radarAlertMsg(const LLUUID& agent_id, const LLAvatarName& av_name,std::string postMsg)
+{	
+	LLChat chat;
+    chat.mText = getRadarName(av_name)+postMsg;
+	chat.mSourceType = CHAT_SOURCE_SYSTEM;
+	LLSD args;
+	args["type"] = LLNotificationsUI::NT_NEARBYCHAT;
+	LLNotificationsUI::LLNotificationManager::instance().onChat(chat, args);
+}
+
+
 void LLPanelPeople::handleLimitRadarByRange(const LLSD& newvalue)
 {
 	LLPanel* cur_panel = mTabContainer->getCurrentPanel();
@@ -880,8 +892,11 @@ void LLPanelPeople::updateNearbyList()
 	//STEP 0: Clear data, saving pieces as needed.
 	LLScrollListItem* lastRadarSelectedItem = mRadarList->getFirstSelected();
 	LLUUID selected_id;
+	S32 lastScroll = mRadarList->getScrollPos();
 	if (lastRadarSelectedItem)
+	{
 		selected_id = lastRadarSelectedItem->getColumn(5)->getValue().asUUID();
+	}
 	mRadarList->clearRows();
 	mRadarEnterAlerts.clear();
 	mRadarLeaveAlerts.clear();
@@ -912,22 +927,27 @@ void LLPanelPeople::updateNearbyList()
 		LLAvatarListItem* av = mNearbyList->getAvatarListItem(avId);
 		F32 avRange          = dist_vec(avPos, posSelf);
 		S32 seentime		 = 0;
-		LLUUID avRegion		 = world->getRegionFromPosGlobal(avPos)->getRegionID();
-			if (lastRadarSweep.count(avId) > 1) // if we detect a multiple ID situation, get lastSeenTime from our cache instead
+		LLUUID avRegion;
+		LLViewerRegion *reg	 = world->getRegionFromPosGlobal(avPos);
+		if ((!reg) || (!av)) // don't update this radar listing if data is inaccessible
+			continue;
+		
+		avRegion = reg->getRegionID();
+		if (lastRadarSweep.count(avId) > 1) // if we detect a multiple ID situation, get lastSeenTime from our cache instead
+		{
+			pair<multimap<LLUUID,radarFields>::iterator,multimap<LLUUID,radarFields>::iterator> dupeAvs;
+			dupeAvs = lastRadarSweep.equal_range(avId);
+			for (multimap<LLUUID,radarFields>::iterator it2 = dupeAvs.first; it2 != dupeAvs.second; ++it2)
 			{
-				pair<multimap<LLUUID,radarFields>::iterator,multimap<LLUUID,radarFields>::iterator> dupeAvs;
-				dupeAvs = lastRadarSweep.equal_range(avId);
-				for (multimap<LLUUID,radarFields>::iterator it2 = dupeAvs.first; it2 != dupeAvs.second; ++it2)
-				{
-					if (it2->second.lastRegion == avRegion)
-						seentime = (S32)difftime(time(NULL),it2->second.firstSeen);
-				}
+				if (it2->second.lastRegion == avRegion)
+					seentime = (S32)difftime(time(NULL),it2->second.firstSeen);
 			}
-			else
-				seentime		 = (S32)difftime(time(NULL),av->getFirstSeen());
-			S32 hours = (S32)(seentime / 3600);
-			S32 mins = (S32)((seentime - hours * 3600) / 60);
-			S32 secs = (S32)((seentime - hours * 3600 - mins * 60));
+		}
+		else
+			seentime		 = (S32)difftime(time(NULL),av->getFirstSeen());
+		S32 hours = (S32)(seentime / 3600);
+		S32 mins = (S32)((seentime - hours * 3600) / 60);
+		S32 secs = (S32)((seentime - hours * 3600 - mins * 60));
 		std::string avSeenStr = llformat("%d:%02d:%02d", hours, mins, secs);
 		S32 avStatusFlags     = av->getAvStatus();
 		std::string avFlagStr = "";
@@ -954,10 +974,12 @@ void LLPanelPeople::updateNearbyList()
 		//2d. Report on net-new entries.
 		if (lastRadarSweep.count(avId) == 0)
 		{
-			if (gSavedSettings.getBOOL("RadarReportChatRange") && (avRange <= CHAT_NORMAL_RADIUS))		
-				reportToNearbyChat(avName+llformat(" entered chat range (%3.2f m)\n",avRange));
+			if (gSavedSettings.getBOOL("RadarReportChatRange") && (avRange <= CHAT_NORMAL_RADIUS))
+				LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, llformat(" entered chat range (%3.2f m).",avRange)));
 			if (gSavedSettings.getBOOL("RadarReportDrawRange") && (avRange <= drawRadius))
-				reportToNearbyChat(avName+llformat(" entered draw distance (%3.2f m)\n",avRange));
+				LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, llformat(" entered draw distance (%3.2f m).",avRange)));
+			if (gSavedSettings.getBOOL("RadarReportSimRange") && (avRegion == regionSelf))
+				LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, llformat(" entered the region (%3.2f m).",avRange)));
 			if (gSavedSettings.getBOOL("RadarEnterChannelAlert") && (!mRadarAlertRequest))
 			{
 				// Autodetect Phoenix chat UUID compatibility. 
@@ -975,6 +997,7 @@ void LLPanelPeople::updateNearbyList()
 		
 		//2e. Build out scrollist-style view
 		LLSD row;
+		row["value"] = avId;
 		row["columns"][0]["column"] = "name";
 		row["columns"][0]["value"] = avName;
 		row["columns"][1]["column"] = "flags";
@@ -1012,7 +1035,7 @@ void LLPanelPeople::updateNearbyList()
 		if (lastRadarSelectedItem)
 			if (avId == selected_id)
 			{
-				mRadarList->selectNthItem(mRadarList->getItemCount());
+				mRadarList->selectByID(avId);
 				updateButtons(); // TODO: only update on change, instead of every tick
 			}
 		
@@ -1023,16 +1046,23 @@ void LLPanelPeople::updateNearbyList()
 			if (gSavedSettings.getBOOL("RadarReportChatRange"))
 			{
 				if ((avRange <= CHAT_NORMAL_RADIUS) && (rf.lastDistance > CHAT_NORMAL_RADIUS))
-					reportToNearbyChat(avName + " entered chat range.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered chat range."));
 				else if ((avRange > CHAT_NORMAL_RADIUS) && (rf.lastDistance <= CHAT_NORMAL_RADIUS))
-					reportToNearbyChat(avName + " left chat range.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left chat range."));
 			}
 			if (gSavedSettings.getBOOL("RadarReportDrawRange"))
 			{
 				if ((avRange <= drawRadius) && (rf.lastDistance > drawRadius))
-					reportToNearbyChat(avName + " entered draw distance.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered draw distance."));
 				else if ((avRange > drawRadius) && (rf.lastDistance <= drawRadius))
-					reportToNearbyChat(avName + " left draw distance.");		
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left draw distance."));		
+			}
+			if (gSavedSettings.getBOOL("RadarReportSimRange"))
+			{
+				if ((avRegion == regionSelf) && (avRegion != rf.lastRegion))
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered the region."));
+				else if ((rf.lastRegion == regionSelf) && (avRegion != regionSelf))
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left the region."));
 			}
 		}
 		else if (lastRadarSweep.count(avId) > 1) // handle duplicates, from sim crossing oddness
@@ -1052,20 +1082,30 @@ void LLPanelPeople::updateNearbyList()
 			if (gSavedSettings.getBOOL("RadarReportChatRange"))
 			{
 				if ((avRange <= CHAT_NORMAL_RADIUS) && (rf.lastDistance > CHAT_NORMAL_RADIUS))
-					reportToNearbyChat(avName + " entered chat range.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered chat range."));
 				else if ((avRange > CHAT_NORMAL_RADIUS) && (rf.lastDistance <= CHAT_NORMAL_RADIUS))
-					reportToNearbyChat(avName + " left chat range.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left chat range."));
 			}
 			if (gSavedSettings.getBOOL("RadarReportDrawRange"))
 			{
 				if ((avRange <= drawRadius) && (rf.lastDistance > drawRadius))
-					reportToNearbyChat(avName + " entered draw distance.");
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered draw distance."));
 				else if ((avRange > drawRadius) && (rf.lastDistance <= drawRadius))
-					reportToNearbyChat(avName + " left draw distance.");		
-			}			
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left draw distance."));		
+			}
+			if (gSavedSettings.getBOOL("RadarReportSimRange"))
+			{
+				if ((avRegion == regionSelf) && (avRegion != rf.lastRegion))
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " entered the region."));
+				else if ((rf.lastRegion == regionSelf) && (avRegion != regionSelf))
+					LLAvatarNameCache::get(avId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left the region."));
+			}
 		}
 	}
 	
+	
+	//STEP 3.0
+	mRadarList->setScrollPos(lastScroll);
 	
 	//STEP 3: Handle any avatars that dropped off the detected list since last time.
 	for (std::multimap <LLUUID, radarFields>::const_iterator i = lastRadarSweep.begin(); i != lastRadarSweep.end(); ++i)
@@ -1075,9 +1115,12 @@ void LLPanelPeople::updateNearbyList()
 		{
 			radarFields rf = i->second;
 			if (gSavedSettings.getBOOL("RadarReportChatRange") && (rf.lastDistance <= CHAT_NORMAL_RADIUS))
-				reportToNearbyChat(rf.avName + " left chat range.");
+				LLAvatarNameCache::get(prevId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left chat range."));
 			if (gSavedSettings.getBOOL("RadarReportDrawRange") && (rf.lastDistance <= drawRadius))
-				reportToNearbyChat(rf.avName + " left draw distance.");
+				LLAvatarNameCache::get(prevId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left draw distance."));
+			if (gSavedSettings.getBOOL("RadarReportSimRange") && (rf.lastRegion == regionSelf))
+				LLAvatarNameCache::get(prevId,boost::bind(&LLPanelPeople::radarAlertMsg, this, _1, _2, " left the region."));
+				
 			if (gSavedSettings.getBOOL("RadarLeaveChannelAlert"))
 				mRadarLeaveAlerts.push_back(prevId);
 		}
@@ -1122,7 +1165,6 @@ void LLPanelPeople::updateNearbyList()
 				mRadarEnterAlerts.pop_back();
 			}
 			LLNearbyChatBar::sendChatFromViewer(msg,CHAT_TYPE_WHISPER,FALSE);
-			llinfos << msg << llendl;
 		}
 	}
 	if (mRadarLeaveAlerts.size() > 0)
@@ -1139,7 +1181,6 @@ void LLPanelPeople::updateNearbyList()
 				mRadarLeaveAlerts.pop_back();
 			}
 			LLNearbyChatBar::sendChatFromViewer(msg,CHAT_TYPE_WHISPER,FALSE);
-			llinfos << msg << llendl;
 		}
 	}   
 
@@ -1149,6 +1190,15 @@ void LLPanelPeople::updateNearbyList()
 	// reset any active alert requests
 	if (alertScripts)
 		mRadarAlertRequest = false;
+	
+	//minimap updates
+	uuid_vec_t selected_uuids;
+	LLUUID sVal = mRadarList->getSelectedValue().asUUID();
+	if (sVal != LLUUID::null)
+	{
+		selected_uuids.push_back(sVal);
+		mMiniMap->setSelected(selected_uuids);
+	}
 	
 }
 
@@ -1184,8 +1234,7 @@ void LLPanelPeople::buttonSetAction(const std::string& btn_name, const commit_si
 
 void LLPanelPeople::reportToNearbyChat(std::string message)
 // small utility method for radar alerts.
-{
-	
+{	
 	LLChat chat;
     chat.mText = message;
 	chat.mSourceType = CHAT_SOURCE_SYSTEM;
@@ -1230,6 +1279,11 @@ void LLPanelPeople::updateButtons()
 		}
 		cur_panel->getChildView("activate_btn")->setEnabled(item_selected && !cur_group_active); // "none" or a non-active group selected
 		cur_panel->getChildView("minus_btn")->setEnabled(item_selected && selected_id.notNull());
+//		cur_panel->getChildView("activate_btn")->setEnabled(item_selected && !cur_group_active); // "none" or a non-active group selected
+// [RLVa:KB] - Checked: 2011-03-28 (RLVa-1.3.0f) | Added: RLVa-1.3.0f
+		cur_panel->getChildView("activate_btn")->setEnabled(
+			item_selected && !cur_group_active && !gRlvHandler.hasBehaviour(RLV_BHVR_SETGROUP)); // "none" or a non-active group selected
+// [/RLVa:KB]
 	}
 	else
 	{
@@ -1432,7 +1486,8 @@ void LLPanelPeople::onFilterEdit(const std::string& search_string)
 
 
 	// Apply new filter.
-	mNearbyList->setNameFilter(mFilterSubStringOrig);
+	// AO: currently broken
+	// mNearbyList->setNameFilter(mFilterSubStringOrig);
 	mOnlineFriendList->setNameFilter(mFilterSubStringOrig);
 	mAllFriendList->setNameFilter(mFilterSubStringOrig);
 	mRecentList->setNameFilter(mFilterSubStringOrig);
@@ -1517,8 +1572,13 @@ void LLPanelPeople::onAvatarListCommitted(LLAvatarList* list)
 	if (getActiveTabName() == NEARBY_TAB_NAME)
 	{
 		uuid_vec_t selected_uuids;
-		getCurrentItemIDs(selected_uuids);
-		mMiniMap->setSelected(selected_uuids);
+		//getCurrentItemIDs(selected_uuids);
+		LLUUID sVal = mRadarList->getSelectedValue().asUUID();
+		if (sVal != LLUUID::null) 
+		{
+			selected_uuids.push_back(sVal);
+			mMiniMap->setSelected(selected_uuids);
+		}
 	} else
 	// Make sure only one of the friends lists (online/all) has selection.
 	if (getActiveTabName() == FRIENDS_TAB_NAME)
@@ -1527,8 +1587,9 @@ void LLPanelPeople::onAvatarListCommitted(LLAvatarList* list)
 			mAllFriendList->resetSelection(true);
 		else if (list == mAllFriendList)
 			mOnlineFriendList->resetSelection(true);
-		else
-			llassert(0 && "commit on unknown friends list");
+// possible side effect of sidebar work; should be no harm in ignoring this -KC
+//		else
+//			llassert(0 && "commit on unknown friends list");
 	}
 
 	updateButtons();
@@ -1827,14 +1888,19 @@ void LLPanelPeople::onRadarNameFmtClicked(const LLSD& userdata)
 		gSavedSettings.setU32("RadarNameFormat", NAMEFORMAT_USERNAME_DISPLAYNAME);
 }
 
-
-std::string LLPanelPeople::getRadarName(LLUUID avId)
+std::string LLPanelPeople::getRadarName(LLAvatarName avname)
 {
-	U32 fmt = gSavedSettings.getU32("RadarNameFormat");
-	LLAvatarName avname;
-	
-	if (LLAvatarNameCache::get(avId,&avname)) // use the synchronous call. We poll every second so there's less value in using the callback form.
+// [RLVa:KB-FS] - Checked: 2011-06-11 (RLVa-1.3.1) | Added: RLVa-1.3.1
+	if (gRlvHandler.hasBehaviour(RLV_BHVR_SHOWNAMES))
 	{
+		return RlvStrings::getAnonym(avname);
+	}
+// [/RLVa:KB-FS]
+
+	U32 fmt = gSavedSettings.getU32("RadarNameFormat");
+	// if display names are enabled, allow a variety of formatting options, depending on menu selection
+	if (gSavedSettings.getBOOL("UseDisplayNames"))
+	{	
 		if (fmt == NAMEFORMAT_DISPLAYNAME)
 		{
 			return avname.mDisplayName;
@@ -1867,6 +1933,17 @@ std::string LLPanelPeople::getRadarName(LLUUID avId)
 		}
 	}
 	
+	// else use legacy name lookups
+	return avname.mDisplayName; // will be mapped to legacyname automatically by the name cache
+}
+
+std::string LLPanelPeople::getRadarName(LLUUID avId)
+{
+	LLAvatarName avname;
+
+	if (LLAvatarNameCache::get(avId,&avname)) // use the synchronous call. We poll every second so there's less value in using the callback form.
+		return getRadarName(avname);
+
 	// name not found. Temporarily fill in with the UUID. It's more distinguishable than (loading...)
 	return avId.asString();
 

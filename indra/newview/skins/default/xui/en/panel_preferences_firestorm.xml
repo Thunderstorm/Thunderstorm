@@ -204,7 +204,18 @@
          value="4" />
 	  </combo_box>
 	  
-        <check_box bottom_delta="-20"
+	  <check_box bottom_delta="-30"
+	  control_name="ShowNetStats"
+	  follows="left|top"
+	  height="16"
+      initial_value="false"
+      label="Show lag meter"
+      left="15"
+      radio_style="false"
+      width="270"
+      tool_tip="Show lag meter in the Status Overlay"/>
+	  
+        <check_box bottom_delta="-30"
       follows="left|top"
       font="SansSerifSmall"
       height="16"
@@ -235,91 +246,151 @@
       function="FS.ToggleSortContacts" />
       </check_box>
 
-     <text
-     top_pad="10"
-     type="string"
-     length="1"
-     follows="left|top"
-     height="15"
-     layout="topleft"
-     left="15"
-     name="lookatshownames"
-     width="200">
-        Camera options:
-    </text>
+	  <check_box bottom_delta="-20"
+      follows="left|top"
+      font="SansSerifSmall"
+      height="16"
+      initial_value="true"
+      label="Render blocked avatars as particle cloud"
+      left="15"
+      mouse_opaque="true"
+      name="ShowMutedAvatarsAsCloud"
+      radio_style="false"
+      width="270"
+      control_name="ShowMutedAvatarsAsCloud"
+      tool_tip="Blocked avatars will be rendered as a particle cloud in special color.">
+      <check_box.commit_callback
+      function="FS.ToggleSortContacts" />
+      </check_box>
+<!--To be removed when LL migrates beta serch to stable-->
+      <text
+    type="string"
+    length="1"
+    follows="left|top"
+    height="15"
+    layout="topleft"
+    left="30"
+    name="Search_Label"
+    top_delta="25"
+    width="200"
+    tool_tip="While the beta URL often provides more accurate search results, it may not always be available.">
+        Default Search URL:
+      </text>
 
-    <check_box bottom_delta="-20"
-     follows="left|top"
-     font="SansSerifSmall"
-     height="16"
-     initial_value="false"
-     label="Disable camera constraints"
-     left="15"
-     mouse_opaque="true"
-     name="disablecameraconstraints"
-     radio_style="false"
-     width="270"
-     control_name="DisableCameraConstraints"
-     tool_tip="Disable the normal bounds put on the camera by avatar position."/>
-
-    <check_box bottom_delta="-20"
-     follows="left|top"
-     font="SansSerifSmall"
-     height="16"
-     initial_value="false"
-     label="Clicking your avatar keeps camera position"
-     left="15"
-     mouse_opaque="true"
-     name="backwardsturnavatar"
-     radio_style="false"
-     width="270"
-     control_name="ClickOnAvatarKeepsCamera"
-     tool_tip="Normally, clicking on your avatar resets the camera position. This option removes this behavior."/>
-
-    <check_box bottom_delta="-20"
-     follows="left|top"
-     font="SansSerifSmall"
-     height="16"
-     initial_value="false"
-     label="Disable minimum camera zoom distance"
-     left="15"
-     mouse_opaque="true"
-     name="disableminzoomdist"
-     radio_style="false"
-     width="270"
-     control_name="PhoenixDisableMinZoomDist"
-     tool_tip="Disable the constraint on the closest distance the camera is allowed to get to an object."/>
-
-    <check_box bottom_delta="-20"
-     follows="left|top"
-     font="SansSerifSmall"
-     height="16"
-     initial_value="false"
-     label="Allow the camera to move without constraints through prims"
-     left="15"
-     mouse_opaque="true"
-     name="ignorecameraconstraints"
-     radio_style="false"
-     width="350"
-     control_name="PhoenixIgnoreSimulatorCameraConstraints"
-     tool_tip="Ignores the 'push' the simulator applies to your camera to keep it out of objects."/>
-
-    <text
-     name="requires_restart_label"
-     follows="left|top"
-     layout="topleft"
-     left_pad="10"
-     top_delta="0"
-     height="20"
-     width="130"
-     text_color="White_25">
-         (requires restart)
-    </text>
-
+      <combo_box
+        control_name="SearchURL"
+        follows="left|top"
+        height="23"
+        layout="topleft"
+        left_delta="200"
+        max_chars="135"
+        name="SearchURL"
+        width="150">
+        <combo_box.item
+         enabled="true"
+         label="Standard V2 search"
+         name="Standard V2 search"
+         value="http://search.secondlife.com/viewer/[CATEGORY]/?q=[QUERY]&amp;p=[AUTH_TOKEN]&amp;r=[MATURITY]&amp;lang=[LANGUAGE]&amp;g=[GODLIKE]&amp;sid=[SESSION_ID]&amp;rid=[REGION_ID]&amp;pid=[PARCEL_ID]&amp;channel=[CHANNEL]&amp;version=[VERSION]&amp;major=[VERSION_MAJOR]&amp;minor=[VERSION_MINOR]&amp;patch=[VERSION_PATCH]&amp;build=[VERSION_BUILD]" />
+        <combo_box.item
+         enabled="true"
+         label="Beta V2 Search"
+         name="Beta V2 Search"
+         value="http://search-beta.secondlife.com/viewer/[CATEGORY]/?q=[QUERY]&amp;p=[AUTH_TOKEN]&amp;r=[MATURITY]&amp;lang=[LANGUAGE]&amp;g=[GODLIKE]&amp;sid=[SESSION_ID]&amp;rid=[REGION_ID]&amp;pid=[PARCEL_ID]&amp;channel=[CHANNEL]&amp;version=[VERSION]&amp;major=[VERSION_MAJOR]&amp;minor=[VERSION_MINOR]&amp;patch=[VERSION_PATCH]&amp;build=[VERSION_BUILD]" />
+      </combo_box>
+      
       </panel>
-	  
-	  
-	   <!--Chat-->
+
+	  <!--View-->
+		<panel
+			border="true"
+			follows="all"
+			height="500"
+			label="View"
+			layout="topleft"
+			left="1"
+			name="firestorm_view"
+			width="517">
+
+		<text
+			top_pad="10"
+			type="string"
+			length="1"
+			follows="left|top"
+			height="15"
+			layout="topleft"
+			left="15"
+			name="camera_options_label"
+			width="200">
+			Camera options:
+		</text>
+
+		<check_box top_pad="4"
+			follows="left|top"
+			font="SansSerifSmall"
+			height="16"
+			initial_value="false"
+			label="Clicking your avatar keeps camera position"
+			layout="topleft"
+			left="30"
+			name="backwardsturnavatar"
+			width="270"
+			control_name="ClickOnAvatarKeepsCamera"
+			tool_tip="Normally, clicking on your avatar resets the camera position. This option removes this behavior."/>
+
+		<check_box top_pad="4"
+			follows="left|top"
+			font="SansSerifSmall"
+			height="16"
+			initial_value="false"
+			label="Disable minimum camera zoom distance"
+			layout="topleft"
+			left="30"
+			name="disableminzoomdist"
+			width="270"
+			control_name="PhoenixDisableMinZoomDist"
+			tool_tip="Disable the constraint on the closest distance the camera is allowed to get to an object."/>
+
+		<check_box top_pad="4"
+			follows="left|top"
+			font="SansSerifSmall"
+			height="16"
+			initial_value="false"
+			label="Allow the camera to move without constraints through prims"
+			layout="topleft"
+			left="30"
+			name="ignorecameraconstraints"
+			width="350"
+			control_name="PhoenixIgnoreSimulatorCameraConstraints"
+			tool_tip="Ignores the 'push' the simulator applies to your camera to keep it out of objects."/>
+
+		<text
+			name="requires_restart_label"
+			follows="left|top"
+			layout="topleft"
+			left_pad="10"
+			top_delta="0"
+			height="20"
+			width="130"
+			text_color="White_25">
+			(requires restart)
+		</text>
+
+		<check_box top_pad="12"
+			follows="left|top"
+			font="SansSerifSmall"
+			height="16"
+			initial_value="false"
+			label="Enable Minimap rotation"
+			layout="topleft"
+			left="15"
+			name="minimaprotate"
+			width="350"
+			control_name="MiniMapRotate"
+			tool_tip="Rotate miniature world map to avatar direction."/>
+
+	  </panel>
+
+	  <!--Chat-->
       <panel
 	    border="true"
         bottom="-500"
@@ -358,7 +429,7 @@
           name="chat_and_in_enhancements"
           follows="left|top"
           layout="topleft"
-          top_pad="20"
+          top_pad="15"
           left="24"
           height="10"
           width="180">
@@ -391,6 +462,15 @@
           left="30"
           height="20"
           width="400" />
+      <check_box
+            control_name="MiniMapChatRing"
+            name="MiniMapChatRing"
+            label="Display a ring on the Minimap indicating local chat range"
+            layout="topleft"
+            top_delta="18"
+            left="30"
+            height="20"
+            width="400" />
 		<check_box
           control_name="RadarReportChatRange"
           name="reportChatRange"
@@ -408,12 +488,46 @@
           top_delta="18"
           left="30"
           height="20"
-          width="400" />          
+          width="400" />
+      <check_box
+            control_name="RadarReportSimRange"
+            name="RadarReportSimRange"
+            label="Radar reports when avatars enter/leave the region"
+            layout="topleft"
+            top_delta="18"
+            left="30"
+            height="20"
+            width="400" />
+		<check_box
+          control_name="ShowStreamMetadata"
+          name="ShowStreamMetadata"
+          label="Show stream title in local chat"
+          layout="topleft"
+          top_delta="18"
+          left="30"
+          height="20"
+          width="400" />
+		<check_box
+          control_name="StreamMetadataAnnounceToChat"
+          name="StreamMetadataAnnounceToChat"
+          label="Announce stream title to chat channel:"
+          layout="topleft"
+          top_delta="18"
+          left="30"
+          height="20"
+          width="400" />
+		<spinner control_name="StreamMetadataAnnounceChannel" decimal_digits="0"
+			enabled="true" layout="topleft" follows="left|top" height="20" bottom_delta="0" left="265" increment="1" 
+			initial_val="362394" 
+			max_val="2147483647" min_val="1" mouse_opaque="true" name="StreamMetadataAnnounceChannel"
+			width="90" />
+		
+		  
         <check_box
           layout="topleft"
           follows="left|top"
           bottom_delta="30"
-          left_delta="-10"
+          left="20"
           width="50"
           height="16"
           control_name="PhoenixNearbyChatbar"
@@ -446,7 +560,7 @@
           width="50"
           height="20"
           control_name="PhoenixLogImToChatConsole"
-          label="Show IMs in chat console"/>
+          label="Show IMs and group chat in chat console"/>
         <check_box
           layout="topleft"
           follows="left|top"
@@ -471,7 +585,7 @@
 		<spinner top_delta="25" control_name="NearbyToastLifeTime" decimal_digits="0"
 			enabled="true" follows="left|top" height="20" increment="1"
 			initial_val="10" label="Fade chat after" label_width="90" left="35"
-			max_val="60" min_val="2" mouse_opaque="true" name="fade_chat_time"
+			max_val="30" min_val="2" mouse_opaque="true" name="fade_chat_time"
 			width="130" />
 		<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			bottom_delta="0" drop_shadow_visible="true" enabled="true"
@@ -500,6 +614,24 @@
           height="20"
           control_name="PhoenixBoldGroupMods"
           label="Show group moderator messages in bold"/>
+        <check_box
+          layout="topleft"
+          follows="left|top"
+          top_delta="20"
+          left="20"
+          width="50"
+          height="20"
+          control_name="PhoenixMuteAllGroups"
+          label="Disable ALL group chats"/>
+        <check_box
+          layout="topleft"
+          follows="left|top"
+          top_delta="20"
+          left="20"
+          width="50"
+          height="20"
+          control_name="PhoenixMuteGroupWhenNoticesDisabled"
+          label="When 'Receive group notices' is disabled, disable group chat as well"/>
 
 		</panel>
 
